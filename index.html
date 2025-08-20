@@ -25,7 +25,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_1bc72a950b95189c50642eca2f8566b8 {
+                #map_0692f0705bfd581d6beacde90985cc84 {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -69,11 +69,11 @@
 
 <div id="cityMenu" role="navigation" aria-label="City quick jump">
   <h3 id="cityMenuHeading">Quick jump</h3>
-  <button class="btn" aria-labelledby="cityMenuHeading" aria-controls="map_1bc72a950b95189c50642eca2f8566b8" data-city="San José" data-lat="9.93" data-lng="-84.08">San José</button>
-  <button class="btn" aria-labelledby="cityMenuHeading" aria-controls="map_1bc72a950b95189c50642eca2f8566b8" data-city="Tamarindo" data-lat="10.3" data-lng="-85.84">Tamarindo</button>
-  <button class="btn" aria-labelledby="cityMenuHeading" aria-controls="map_1bc72a950b95189c50642eca2f8566b8" data-city="Jacó" data-lat="9.62" data-lng="-84.63">Jacó</button>
-  <button class="btn" aria-labelledby="cityMenuHeading" aria-controls="map_1bc72a950b95189c50642eca2f8566b8" data-city="Manuel Antonio" data-lat="9.39" data-lng="-84.14">Manuel Antonio</button>
-  <button class="btn" aria-labelledby="cityMenuHeading" aria-controls="map_1bc72a950b95189c50642eca2f8566b8" data-city="Puerto Viejo" data-lat="9.66" data-lng="-82.76">Puerto Viejo</button>
+  <button class="btn" aria-labelledby="cityMenuHeading" aria-controls="map_0692f0705bfd581d6beacde90985cc84" data-city="San José" data-lat="9.93" data-lng="-84.08">San José</button>
+  <button class="btn" aria-labelledby="cityMenuHeading" aria-controls="map_0692f0705bfd581d6beacde90985cc84" data-city="Tamarindo" data-lat="10.3" data-lng="-85.84">Tamarindo</button>
+  <button class="btn" aria-labelledby="cityMenuHeading" aria-controls="map_0692f0705bfd581d6beacde90985cc84" data-city="Jacó" data-lat="9.62" data-lng="-84.63">Jacó</button>
+  <button class="btn" aria-labelledby="cityMenuHeading" aria-controls="map_0692f0705bfd581d6beacde90985cc84" data-city="Manuel Antonio" data-lat="9.39" data-lng="-84.14">Manuel Antonio</button>
+  <button class="btn" aria-labelledby="cityMenuHeading" aria-controls="map_0692f0705bfd581d6beacde90985cc84" data-city="Puerto Viejo" data-lat="9.66" data-lng="-82.76">Puerto Viejo</button>
 </div>
 
 <button id="cityFab" aria-haspopup="dialog" aria-expanded="false" aria-controls="citySheet">Cities</button>
@@ -96,32 +96,43 @@
     var softNE = L.latLng(12.1 + 0.60, -82.0 + 0.35);
     var softBounds = L.latLngBounds(softSW, softNE);
 
-    var mapRef = map_1bc72a950b95189c50642eca2f8566b8;
+    var mapRef = map_0692f0705bfd581d6beacde90985cc84;
     mapRef.setMaxBounds(hardBounds);
     mapRef.options.maxBoundsViscosity = 1.0;
     var baseMinZoom = mapRef.getBoundsZoom(hardBounds);
     mapRef.setMinZoom(baseMinZoom);
 
-    // Fit all cities; responsive padding
     var cityBounds = L.latLngBounds([[9.93,-84.08],[10.3,-85.84],[9.62,-84.63],[9.39,-84.14],[9.66,-82.76]]);
     var isPopupOpen = false;
-    function isMobile() {
-      return window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
-    }
+    function isMobile() { return window.matchMedia('(max-width: 900px), (pointer: coarse)').matches; }
+
     function fitAllCitiesForLayout() {
-      if (isPopupOpen && isMobile()) return; // don't refit on mobile while popup open
-      var mobile = window.matchMedia('(max-width: 768px)').matches;
-      mapRef.fitBounds(cityBounds, {
-        paddingTopLeft: mobile ? [20, 30] : [30, 40],
-        paddingBottomRight: mobile ? [20, 30] : [200, 30],
-        animate: false
-      });
+      if (isPopupOpen && isMobile()) return; // don't refit on mobile during popup
+      var mobile = isMobile();
+      if (mobile) {
+        // Closest possible zoom that still contains all cities, device-size aware.
+        var baseZoom = mapRef.getBoundsZoom(cityBounds, true);   // tightest fit (no padding)
+        var center = cityBounds.getCenter();
+        mapRef.setView(center, baseZoom, {animate:false});
+        // Try one step closer; if it would crop any city, fall back.
+        var candidate = baseZoom + 1;
+        mapRef.setView(center, candidate, {animate:false});
+        if (!mapRef.getBounds().contains(cityBounds)) {
+          mapRef.setView(center, baseZoom, {animate:false});
+        }
+        // Slight breathing room by nudging inside a padded bounds (very small)
+        mapRef.panInsideBounds(cityBounds.pad(0.02), {animate:false});
+      } else {
+        mapRef.fitBounds(cityBounds, {
+          paddingTopLeft: [30, 40],
+          paddingBottomRight: [200, 30],
+          animate: false
+        });
+      }
     }
+
     var resizeTimer;
-    function onResize() {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(fitAllCitiesForLayout, 120);
-    }
+    function onResize() { clearTimeout(resizeTimer); resizeTimer = setTimeout(fitAllCitiesForLayout, 120); }
     fitAllCitiesForLayout();
     window.addEventListener('resize', onResize);
 
@@ -138,14 +149,14 @@
     });
 
     var cityMarkers = {
-      "San José": marker_24fa6a11e5d29af9ef4d7e7a4a91f42f,
-      "Tamarindo": marker_a6f50d97d4f0e523aa38fdc1b2bd84d5,
-      "Jacó": marker_3cb12c6a44e5104d388e411e493df41b,
-      "Manuel Antonio": marker_229bfaaed55d537baa0984cf7169662e,
-      "Puerto Viejo": marker_820e4a04f18945fbd0fdef251310c7c5
+      "San José": marker_d426c699724f9de162ebf9ee36e07c6e,
+      "Tamarindo": marker_a14e316f692a4aea84ae2b9ec40c25d8,
+      "Jacó": marker_703393361cec6fc26d2518aa16161186,
+      "Manuel Antonio": marker_3339f60be4c799d4503269db5304be1c,
+      "Puerto Viejo": marker_92823205f4b5cd6f6168e9a6ee97f921
     };
 
-    // Popup behavior
+    // Popup behavior (same as last build)
     Object.values(cityMarkers).forEach(function(mk) {
       var p = mk.getPopup && mk.getPopup();
       if (p) {
@@ -163,7 +174,6 @@
       closeSheet();
     }
 
-    // Desktop quick jump
     document.querySelectorAll('#cityMenu .btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         jumpToCity(this.getAttribute('data-city'),
@@ -172,15 +182,12 @@
       });
     });
 
-    // Mobile sheet + FAB
     var fab = document.getElementById('cityFab');
     var sheet = document.getElementById('citySheet');
     function openSheet() { sheet.classList.add('open'); fab.setAttribute('aria-expanded','true'); }
     function closeSheet() { sheet.classList.remove('open'); fab.setAttribute('aria-expanded','false'); }
     if (fab && sheet) {
-      fab.addEventListener('click', function() {
-        if (sheet.classList.contains('open')) closeSheet(); else openSheet();
-      });
+      fab.addEventListener('click', function() { sheet.classList.toggle('open'); });
       sheet.querySelectorAll('.btn').forEach(function(btn){
         btn.addEventListener('click', function(){
           jumpToCity(this.getAttribute('data-city'),
@@ -190,7 +197,7 @@
       });
     }
 
-    // --- Zoom lock ONLY on mobile while popup open ---
+    // Mobile-only zoom lock when popup is open
     function lockZoom() {
       mapRef.scrollWheelZoom.disable();
       mapRef.touchZoom.disable();
@@ -206,40 +213,32 @@
       mapRef.doubleClickZoom.enable();
       mapRef.boxZoom.enable();
       mapRef.keyboard.enable();
-      if (mapRef._prevMinZoom !== undefined) {
-        mapRef.setMinZoom(mapRef._prevMinZoom);
-        delete mapRef._prevMinZoom;
-      }
+      if (mapRef._prevMinZoom !== undefined) { mapRef.setMinZoom(mapRef._prevMinZoom); delete mapRef._prevMinZoom; }
     }
 
     mapRef.on('popupopen', function() {
       isPopupOpen = true;
       mapRef.setMaxBounds(softBounds);
       if (isMobile()) lockZoom();
-      setTimeout(function() {
-        mapRef.panInsideBounds(softBounds, {animate: true, paddingTopLeft: [20,30], paddingBottomRight: [20,30]});
-      }, 0);
+      setTimeout(function() { mapRef.panInsideBounds(softBounds, {animate: true, paddingTopLeft: [20,30], paddingBottomRight: [20,30]}); }, 0);
     });
     mapRef.on('popupclose', function() {
       isPopupOpen = false;
       if (isMobile()) unlockZoom();
       mapRef.panInsideBounds(hardBounds, {animate: true});
-      setTimeout(function() {
-        mapRef.setMaxBounds(hardBounds);
-        mapRef.panInsideBounds(hardBounds, {animate: true});
-      }, 350);
+      setTimeout(function() { mapRef.setMaxBounds(hardBounds); mapRef.panInsideBounds(hardBounds, {animate: true}); }, 350);
     });
   });
 </script>
     
-            <div class="folium-map" id="map_1bc72a950b95189c50642eca2f8566b8" ></div>
+            <div class="folium-map" id="map_0692f0705bfd581d6beacde90985cc84" ></div>
         
 </body>
 <script>
     
     
-            var map_1bc72a950b95189c50642eca2f8566b8 = L.map(
-                "map_1bc72a950b95189c50642eca2f8566b8",
+            var map_0692f0705bfd581d6beacde90985cc84 = L.map(
+                "map_0692f0705bfd581d6beacde90985cc84",
                 {
                     center: [9.9, -84.2],
                     crs: L.CRS.EPSG3857,
@@ -253,36 +252,36 @@
 
         
     
-            var tile_layer_a0c7bcf539e9e498496787d76b7c7e4b = L.tileLayer(
+            var tile_layer_a8e079ac908503383f3bc1dfe8909f07 = L.tileLayer(
                 "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
                 {"attribution": "Tiles \u00a9 Esri \u2014 Source: Esri, Maxar, Earthstar Geographics", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            map_1bc72a950b95189c50642eca2f8566b8.fitBounds(
+            map_0692f0705bfd581d6beacde90985cc84.fitBounds(
                 [[7.0, -87.0], [12.1, -82.0]],
                 {}
             );
         
     
-            var feature_group_11c0770b618d41bc1d8efdcbb1db8033 = L.featureGroup(
+            var feature_group_9a6ef22d372847acd4aecd2405e9953f = L.featureGroup(
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var marker_ae1b30698f4aec703a03f4e8e2e13de5 = L.marker(
+            var marker_df8b24f9f1a3bc65e20e39ff14d4d5db = L.marker(
                 [9.9939, -84.2088],
                 {}
-            ).addTo(feature_group_11c0770b618d41bc1d8efdcbb1db8033);
+            ).addTo(feature_group_9a6ef22d372847acd4aecd2405e9953f);
         
     
-            var icon_8ea90113e3eb327ca7fbe57c5b666977 = L.AwesomeMarkers.icon(
+            var icon_60d9ff5fc9357b463aa18c6e6827d5b5 = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "plane", "iconColor": "white", "markerColor": "green", "prefix": "fa"}
             );
-            marker_ae1b30698f4aec703a03f4e8e2e13de5.setIcon(icon_8ea90113e3eb327ca7fbe57c5b666977);
+            marker_df8b24f9f1a3bc65e20e39ff14d4d5db.setIcon(icon_60d9ff5fc9357b463aa18c6e6827d5b5);
         
     
-            marker_ae1b30698f4aec703a03f4e8e2e13de5.bindTooltip(
+            marker_df8b24f9f1a3bc65e20e39ff14d4d5db.bindTooltip(
                 `<div>
                      SJO
                  </div>`,
@@ -290,29 +289,29 @@
             );
         
     
-            var marker_bd7e31206cfb5da4cec35215aa7aee49 = L.marker(
+            var marker_b70f53d38a9c4f10d926f98087826e15 = L.marker(
                 [9.9939, -84.2088],
                 {}
-            ).addTo(feature_group_11c0770b618d41bc1d8efdcbb1db8033);
+            ).addTo(feature_group_9a6ef22d372847acd4aecd2405e9953f);
         
     
-            var div_icon_39aef569ae17519338cf11ecee99ad95 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 13px; font-weight: 800; color: #00ff99; text-shadow: 0 0 6px rgba(0,0,0,0.8); transform: translate(12px, -4px);\"\u003eSJO\u003c/div\u003e"});
-            marker_bd7e31206cfb5da4cec35215aa7aee49.setIcon(div_icon_39aef569ae17519338cf11ecee99ad95);
+            var div_icon_8e7b0fda6af23d0343f539271979a794 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 13px; font-weight: 800; color: #00ff99; text-shadow: 0 0 6px rgba(0,0,0,0.8); transform: translate(12px, -4px);\"\u003eSJO\u003c/div\u003e"});
+            marker_b70f53d38a9c4f10d926f98087826e15.setIcon(div_icon_8e7b0fda6af23d0343f539271979a794);
         
     
-            var marker_7ed25fd622a57028c611ec49af729e5b = L.marker(
+            var marker_0dc8a8a5fa497ad61f19c4d5d397f515 = L.marker(
                 [10.5933, -85.5444],
                 {}
-            ).addTo(feature_group_11c0770b618d41bc1d8efdcbb1db8033);
+            ).addTo(feature_group_9a6ef22d372847acd4aecd2405e9953f);
         
     
-            var icon_97acff94db7f8be8a2376f4f700587b8 = L.AwesomeMarkers.icon(
+            var icon_cb3ec83b5dcd1385abf41c7908ce3700 = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "plane", "iconColor": "white", "markerColor": "green", "prefix": "fa"}
             );
-            marker_7ed25fd622a57028c611ec49af729e5b.setIcon(icon_97acff94db7f8be8a2376f4f700587b8);
+            marker_0dc8a8a5fa497ad61f19c4d5d397f515.setIcon(icon_cb3ec83b5dcd1385abf41c7908ce3700);
         
     
-            marker_7ed25fd622a57028c611ec49af729e5b.bindTooltip(
+            marker_0dc8a8a5fa497ad61f19c4d5d397f515.bindTooltip(
                 `<div>
                      LIR
                  </div>`,
@@ -320,29 +319,29 @@
             );
         
     
-            var marker_5345f9aa3bf216cb64b6f10d9a2d83af = L.marker(
+            var marker_bf5f44dcfbac1daf0f33dee4753bc0b4 = L.marker(
                 [10.5933, -85.5444],
                 {}
-            ).addTo(feature_group_11c0770b618d41bc1d8efdcbb1db8033);
+            ).addTo(feature_group_9a6ef22d372847acd4aecd2405e9953f);
         
     
-            var div_icon_f07bd5e3c9db08d4f15261de177cb886 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 13px; font-weight: 800; color: #00ff99; text-shadow: 0 0 6px rgba(0,0,0,0.8); transform: translate(12px, -4px);\"\u003eLIR\u003c/div\u003e"});
-            marker_5345f9aa3bf216cb64b6f10d9a2d83af.setIcon(div_icon_f07bd5e3c9db08d4f15261de177cb886);
+            var div_icon_086aca74fa1bd1697a54b998bd0280b7 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 13px; font-weight: 800; color: #00ff99; text-shadow: 0 0 6px rgba(0,0,0,0.8); transform: translate(12px, -4px);\"\u003eLIR\u003c/div\u003e"});
+            marker_bf5f44dcfbac1daf0f33dee4753bc0b4.setIcon(div_icon_086aca74fa1bd1697a54b998bd0280b7);
         
     
-            var marker_9f75b9970108080a11857d6f370a6af3 = L.marker(
+            var marker_fe97f2705a68457513cfbae729b1e86f = L.marker(
                 [9.4432, -84.1298],
                 {}
-            ).addTo(feature_group_11c0770b618d41bc1d8efdcbb1db8033);
+            ).addTo(feature_group_9a6ef22d372847acd4aecd2405e9953f);
         
     
-            var icon_d63b7b02b32b1201aec293cc745387da = L.AwesomeMarkers.icon(
+            var icon_6acd4afe08644cf201517865d26ba42d = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "plane", "iconColor": "white", "markerColor": "green", "prefix": "fa"}
             );
-            marker_9f75b9970108080a11857d6f370a6af3.setIcon(icon_d63b7b02b32b1201aec293cc745387da);
+            marker_fe97f2705a68457513cfbae729b1e86f.setIcon(icon_6acd4afe08644cf201517865d26ba42d);
         
     
-            marker_9f75b9970108080a11857d6f370a6af3.bindTooltip(
+            marker_fe97f2705a68457513cfbae729b1e86f.bindTooltip(
                 `<div>
                      XQP
                  </div>`,
@@ -350,29 +349,29 @@
             );
         
     
-            var marker_5e1c6a7c75cd40b5a65e706af2ce783a = L.marker(
+            var marker_297a03697eb5595ae12f1968bb37fcd6 = L.marker(
                 [9.4432, -84.1298],
                 {}
-            ).addTo(feature_group_11c0770b618d41bc1d8efdcbb1db8033);
+            ).addTo(feature_group_9a6ef22d372847acd4aecd2405e9953f);
         
     
-            var div_icon_2aaf5db7eeaeaddf7069692c25cfa3f6 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 13px; font-weight: 800; color: #00ff99; text-shadow: 0 0 6px rgba(0,0,0,0.8); transform: translate(12px, -4px);\"\u003eXQP\u003c/div\u003e"});
-            marker_5e1c6a7c75cd40b5a65e706af2ce783a.setIcon(div_icon_2aaf5db7eeaeaddf7069692c25cfa3f6);
+            var div_icon_ad855744fe51fa8271d5b7bb5f9ff6f8 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 13px; font-weight: 800; color: #00ff99; text-shadow: 0 0 6px rgba(0,0,0,0.8); transform: translate(12px, -4px);\"\u003eXQP\u003c/div\u003e"});
+            marker_297a03697eb5595ae12f1968bb37fcd6.setIcon(div_icon_ad855744fe51fa8271d5b7bb5f9ff6f8);
         
     
-            var marker_362b33f293818a83aa21185254658aec = L.marker(
+            var marker_794bdf050657b9b95c3d1e8bba374f9c = L.marker(
                 [10.3139, -85.8163],
                 {}
-            ).addTo(feature_group_11c0770b618d41bc1d8efdcbb1db8033);
+            ).addTo(feature_group_9a6ef22d372847acd4aecd2405e9953f);
         
     
-            var icon_84274a5d4929483dd949027ace5eb012 = L.AwesomeMarkers.icon(
+            var icon_9e58e682035c692661165009eef666b7 = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "plane", "iconColor": "white", "markerColor": "green", "prefix": "fa"}
             );
-            marker_362b33f293818a83aa21185254658aec.setIcon(icon_84274a5d4929483dd949027ace5eb012);
+            marker_794bdf050657b9b95c3d1e8bba374f9c.setIcon(icon_9e58e682035c692661165009eef666b7);
         
     
-            marker_362b33f293818a83aa21185254658aec.bindTooltip(
+            marker_794bdf050657b9b95c3d1e8bba374f9c.bindTooltip(
                 `<div>
                      TNO
                  </div>`,
@@ -380,239 +379,239 @@
             );
         
     
-            var marker_fd3ca65f71ad24184f035a6344e25f43 = L.marker(
+            var marker_0ac84ad6980d6c7cca847901d78114ad = L.marker(
                 [10.3139, -85.8163],
                 {}
-            ).addTo(feature_group_11c0770b618d41bc1d8efdcbb1db8033);
+            ).addTo(feature_group_9a6ef22d372847acd4aecd2405e9953f);
         
     
-            var div_icon_68df6e3578823642dc5868f9ca1f53fe = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 13px; font-weight: 800; color: #00ff99; text-shadow: 0 0 6px rgba(0,0,0,0.8); transform: translate(12px, -4px);\"\u003eTNO\u003c/div\u003e"});
-            marker_fd3ca65f71ad24184f035a6344e25f43.setIcon(div_icon_68df6e3578823642dc5868f9ca1f53fe);
+            var div_icon_3fd4fd2d49efc5469e89d3807282b9d4 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 13px; font-weight: 800; color: #00ff99; text-shadow: 0 0 6px rgba(0,0,0,0.8); transform: translate(12px, -4px);\"\u003eTNO\u003c/div\u003e"});
+            marker_0ac84ad6980d6c7cca847901d78114ad.setIcon(div_icon_3fd4fd2d49efc5469e89d3807282b9d4);
         
     
-            var circle_marker_95daa7ab94f84cf8f2e918857144f9df = L.circleMarker(
+            var circle_marker_6af016a6956c1c58afc032e5528af0a0 = L.circleMarker(
                 [9.93, -84.08],
                 {"bubblingMouseEvents": true, "color": "#ffffff", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffffff", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 3}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var marker_b231748e47623a8b23bf4575538509ff = L.marker(
+            var marker_339fb663e0da17f0e303e00f450f874d = L.marker(
                 [9.93, -84.08],
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var div_icon_a8934ce831bb2009f530ad4b93b69c66 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 16px; font-weight: 800; color: #ffffff; text-shadow: 0 0 6px rgba(0,0,0,0.85); transform: translate(16px, -6px);\"\u003eSan Jos\u00e9\u003c/div\u003e"});
-            marker_b231748e47623a8b23bf4575538509ff.setIcon(div_icon_a8934ce831bb2009f530ad4b93b69c66);
+            var div_icon_69f6b5822db90d9b627ac6c8197d73e9 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 16px; font-weight: 800; color: #ffffff; text-shadow: 0 0 6px rgba(0,0,0,0.85); transform: translate(16px, -6px);\"\u003eSan Jos\u00e9\u003c/div\u003e"});
+            marker_339fb663e0da17f0e303e00f450f874d.setIcon(div_icon_69f6b5822db90d9b627ac6c8197d73e9);
         
     
-            var marker_24fa6a11e5d29af9ef4d7e7a4a91f42f = L.marker(
+            var marker_d426c699724f9de162ebf9ee36e07c6e = L.marker(
                 [9.93, -84.08],
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var icon_f175acebcd0dfa43d06d888d40437026 = L.AwesomeMarkers.icon(
+            var icon_e24402959221b72d9e2e8bf1e29d0297 = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "white", "prefix": "glyphicon"}
             );
-            marker_24fa6a11e5d29af9ef4d7e7a4a91f42f.setIcon(icon_f175acebcd0dfa43d06d888d40437026);
+            marker_d426c699724f9de162ebf9ee36e07c6e.setIcon(icon_e24402959221b72d9e2e8bf1e29d0297);
         
     
-        var popup_0673466621db4b14c290bb5c36a15628 = L.popup({"maxWidth": 420});
+        var popup_f4c32719a464fabe5d2bdc9ef6c7be40 = L.popup({"maxWidth": 420});
 
         
-            var html_57e61d9774e0026278ae7bc0dfb5a255 = $(`<div id="html_57e61d9774e0026278ae7bc0dfb5a255" style="width: 100.0%; height: 100.0%;">     <div class="cr-popup" style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">         <div class="cr-title" style="font-weight: 800; font-size: 20px;"><b>San José</b></div>         <ul class="cr-list" style="padding-left: 16px; margin: 0; font-size: 16px; line-height: 1.5; color: #111;">             <li><b>🎭 Vibe</b>: Capital culture—museums, theatre, craft bars.</li>             <li><b>✅ Why it fits</b>: Best big‑city dining & nightlife; good for 1–2 nights.</li>             <li><b>✈️ Airport</b>: SJO (nearby in Alajuela)</li>             <li><b>🛏️ Stay types</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li>🏨 <a href="https://www.hotels.com/Hotel-Search?destination=San%20Jos%C3%A9%2C%20San%20Jos%C3%A9%20Province%2C%20Costa%20Rica&startDate=2026-01-15&endDate=2026-01-20&upsellingNumNightsAdded=&theme=&userIntent=&semdtl=&upsellingDiscountTypeAdded=&categorySearch=&useRewards=false&sort=RECOMMENDED&adults=2&children=&latLong=&daysInFuture&stayLength&paymentType=PAY_LATER&guestRating=40&stay_options_group=hotels_option&regionId=3177&flexibility=1_DAY&pwaDialog=" target="_blank" rel="noopener">Hotels</a></li><li>🏡 <a href="https://www.airbnb.com/s/San-Jos%C3%A9-Province--Costa-Rica/homes?refinement_paths%5B%5D=%2Fhomes&place_id=ChIJxRUNxULjoI8RNuhDZCmsjv8&checkin=2026-01-15&checkout=2026-01-20&adults=6&query=San%20Jos%C3%A9%20Province%2C%20Costa%20Rica&flexible_trip_lengths%5B%5D=one_week&monthly_start_date=2025-09-01&monthly_length=3&monthly_end_date=2025-12-01&search_mode=regular_search&price_filter_input_type=2&channel=EXPLORE&source=structured_search_input_header&search_type=user_map_move&ne_lat=10.228066169205295&ne_lng=-83.88856649747908&sw_lat=9.652876431685845&sw_lng=-84.40957267869885&zoom=10.26791434723343&zoom_level=10.26791434723343&search_by_map=true&price_filter_num_nights=5" target="_blank" rel="noopener">Airbnb</a></li></ul>             <li><b>🍸 Nightlife</b>: Cocktail bars & clubs in Escazú; gastropubs in Escalante; live music downtown.</li>             <li><b>🛡️ Safety</b>: Typical big‑city precautions; use rideshare at night.</li>             <li><b>🥾 Excursions</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Britt+Coffee+Tour+%28Heredia%29+San+Jos%C3%A9" target="_blank" rel="noopener">Britt Coffee Tour (Heredia)</a></li><li><a href="https://www.google.com/search?q=Doka+Coffee+Estate+San+Jos%C3%A9" target="_blank" rel="noopener">Doka Coffee Estate</a></li><li><a href="https://www.google.com/search?q=Po%C3%A1s+Volcano+National+Park+San+Jos%C3%A9" target="_blank" rel="noopener">Poás Volcano National Park</a></li><li><a href="https://www.google.com/search?q=Iraz%C3%BA+Volcano+National+Park+San+Jos%C3%A9" target="_blank" rel="noopener">Irazú Volcano National Park</a></li><li><a href="https://www.google.com/search?q=La+Paz+Waterfall+Gardens+San+Jos%C3%A9" target="_blank" rel="noopener">La Paz Waterfall Gardens</a></li></ul>             <br>             <li><b>🧭 Optional Day Trips</b></li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=La+Fortuna+%2F+Arenal+San+Jos%C3%A9" target="_blank" rel="noopener">La Fortuna / Arenal</a></li><li><a href="https://www.google.com/search?q=Monteverde+Cloud+Forest+San+Jos%C3%A9" target="_blank" rel="noopener">Monteverde Cloud Forest</a></li></ul>         </ul>     </div>     </div>`)[0];
-            popup_0673466621db4b14c290bb5c36a15628.setContent(html_57e61d9774e0026278ae7bc0dfb5a255);
+            var html_a6f15e1eaf48dc2692df8fdb75ffae1a = $(`<div id="html_a6f15e1eaf48dc2692df8fdb75ffae1a" style="width: 100.0%; height: 100.0%;">     <div class="cr-popup" style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">         <div class="cr-title" style="font-weight: 800; font-size: 20px;"><b>San José</b></div>         <ul class="cr-list" style="padding-left: 16px; margin: 0; font-size: 16px; line-height: 1.5; color: #111;">             <li><b>🎭 Vibe</b>: Capital culture—museums, theatre, craft bars.</li>             <li><b>✅ Why it fits</b>: Best big‑city dining & nightlife; good for 1–2 nights.</li>             <li><b>✈️ Airport</b>: SJO (nearby in Alajuela)</li>             <li><b>🛏️ Stay types</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li>🏨 <a href="https://www.hotels.com/Hotel-Search?destination=San%20Jos%C3%A9%2C%20San%20Jos%C3%A9%20Province%2C%20Costa%20Rica&startDate=2026-01-15&endDate=2026-01-20&upsellingNumNightsAdded=&theme=&userIntent=&semdtl=&upsellingDiscountTypeAdded=&categorySearch=&useRewards=false&sort=RECOMMENDED&adults=2&children=&latLong=&daysInFuture&stayLength&paymentType=PAY_LATER&guestRating=40&stay_options_group=hotels_option&regionId=3177&flexibility=1_DAY&pwaDialog=" target="_blank" rel="noopener">Hotels</a></li><li>🏡 <a href="https://www.airbnb.com/s/San-Jos%C3%A9-Province--Costa-Rica/homes?refinement_paths%5B%5D=%2Fhomes&place_id=ChIJxRUNxULjoI8RNuhDZCmsjv8&checkin=2026-01-15&checkout=2026-01-20&adults=6&query=San%20Jos%C3%A9%20Province%2C%20Costa%20Rica&flexible_trip_lengths%5B%5D=one_week&monthly_start_date=2025-09-01&monthly_length=3&monthly_end_date=2025-12-01&search_mode=regular_search&price_filter_input_type=2&channel=EXPLORE&source=structured_search_input_header&search_type=user_map_move&ne_lat=10.228066169205295&ne_lng=-83.88856649747908&sw_lat=9.652876431685845&sw_lng=-84.40957267869885&zoom=10.26791434723343&zoom_level=10.26791434723343&search_by_map=true&price_filter_num_nights=5" target="_blank" rel="noopener">Airbnb</a></li></ul>             <li><b>🍸 Nightlife</b>: Cocktail bars & clubs in Escazú; gastropubs in Escalante; live music downtown.</li>             <li><b>🛡️ Safety</b>: Typical big‑city precautions; use rideshare at night.</li>             <li><b>🥾 Excursions</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Britt+Coffee+Tour+%28Heredia%29+San+Jos%C3%A9" target="_blank" rel="noopener">Britt Coffee Tour (Heredia)</a></li><li><a href="https://www.google.com/search?q=Doka+Coffee+Estate+San+Jos%C3%A9" target="_blank" rel="noopener">Doka Coffee Estate</a></li><li><a href="https://www.google.com/search?q=Po%C3%A1s+Volcano+National+Park+San+Jos%C3%A9" target="_blank" rel="noopener">Poás Volcano National Park</a></li><li><a href="https://www.google.com/search?q=Iraz%C3%BA+Volcano+National+Park+San+Jos%C3%A9" target="_blank" rel="noopener">Irazú Volcano National Park</a></li><li><a href="https://www.google.com/search?q=La+Paz+Waterfall+Gardens+San+Jos%C3%A9" target="_blank" rel="noopener">La Paz Waterfall Gardens</a></li></ul>             <br>             <li><b>🧭 Optional Day Trips</b></li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=La+Fortuna+%2F+Arenal+San+Jos%C3%A9" target="_blank" rel="noopener">La Fortuna / Arenal</a></li><li><a href="https://www.google.com/search?q=Monteverde+Cloud+Forest+San+Jos%C3%A9" target="_blank" rel="noopener">Monteverde Cloud Forest</a></li></ul>         </ul>     </div>     </div>`)[0];
+            popup_f4c32719a464fabe5d2bdc9ef6c7be40.setContent(html_a6f15e1eaf48dc2692df8fdb75ffae1a);
         
 
-        marker_24fa6a11e5d29af9ef4d7e7a4a91f42f.bindPopup(popup_0673466621db4b14c290bb5c36a15628)
+        marker_d426c699724f9de162ebf9ee36e07c6e.bindPopup(popup_f4c32719a464fabe5d2bdc9ef6c7be40)
         ;
 
         
     
     
-            var circle_marker_af7d2c2048503aa28dc057b1076e4e07 = L.circleMarker(
+            var circle_marker_346c2ffc523dd0bcf871a746efa564a5 = L.circleMarker(
                 [10.3, -85.84],
                 {"bubblingMouseEvents": true, "color": "#ffffff", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffffff", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 3}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var marker_39a97577172b5c41399e57715e6afb44 = L.marker(
+            var marker_aea3a8541b2d61c6cb67f20715ad8f2e = L.marker(
                 [10.3, -85.84],
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var div_icon_5b83d1d8196bda30d47c7c6c63ab057c = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 16px; font-weight: 800; color: #ffffff; text-shadow: 0 0 6px rgba(0,0,0,0.85); transform: translate(16px, 6px);\"\u003eTamarindo\u003c/div\u003e"});
-            marker_39a97577172b5c41399e57715e6afb44.setIcon(div_icon_5b83d1d8196bda30d47c7c6c63ab057c);
+            var div_icon_a7040a415922539cb3df120e0dd26db6 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 16px; font-weight: 800; color: #ffffff; text-shadow: 0 0 6px rgba(0,0,0,0.85); transform: translate(16px, 6px);\"\u003eTamarindo\u003c/div\u003e"});
+            marker_aea3a8541b2d61c6cb67f20715ad8f2e.setIcon(div_icon_a7040a415922539cb3df120e0dd26db6);
         
     
-            var marker_a6f50d97d4f0e523aa38fdc1b2bd84d5 = L.marker(
+            var marker_a14e316f692a4aea84ae2b9ec40c25d8 = L.marker(
                 [10.3, -85.84],
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var icon_78614796e9e672d1fcd3d7033a0f38ff = L.AwesomeMarkers.icon(
+            var icon_a392711a377f78c52c133aabf5c23c45 = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "white", "prefix": "glyphicon"}
             );
-            marker_a6f50d97d4f0e523aa38fdc1b2bd84d5.setIcon(icon_78614796e9e672d1fcd3d7033a0f38ff);
+            marker_a14e316f692a4aea84ae2b9ec40c25d8.setIcon(icon_a392711a377f78c52c133aabf5c23c45);
         
     
-        var popup_e42f02f7b27c5a1bd64964b5df47e22c = L.popup({"maxWidth": 420});
+        var popup_6444577abadf974728162582f5b726e2 = L.popup({"maxWidth": 420});
 
         
-            var html_6323d590ca4040660e999535208491ba = $(`<div id="html_6323d590ca4040660e999535208491ba" style="width: 100.0%; height: 100.0%;">     <div class="cr-popup" style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">         <div class="cr-title" style="font-weight: 800; font-size: 20px;"><b>Tamarindo</b></div>         <ul class="cr-list" style="padding-left: 16px; margin: 0; font-size: 16px; line-height: 1.5; color: #111;">             <li><b>🎭 Vibe</b>: Surf town + sunset bars, very walkable.</li>             <li><b>✅ Why it fits</b>: Blend of beach, restaurants, and nightlife in Guanacaste.</li>             <li><b>✈️ Airport</b>: LIR (~1.5 hr) • TNO (local)</li>             <li><b>🛏️ Stay types</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li>🏨 <a href="https://www.hotels.com/Hotel-Search?destination=Tamarindo%2C%20Guanacaste%2C%20Costa%20Rica&startDate=2026-01-15&endDate=2026-01-20&upsellingNumNightsAdded=&theme=&userIntent=&semdtl=&upsellingDiscountTypeAdded=&categorySearch=&useRewards=false&sort=RECOMMENDED&paymentType=PAY_LATER&stay_options_group=hotels_option&guestRating=40&regionId=500187&adults=2&children=&flexibility=1_DAY&latLong&pwaDialog=&daysInFuture&stayLength" target="_blank" rel="noopener">Hotels</a></li><li>🏡 <a href="https://www.airbnb.com/s/Tamarindo--Costa-Rica/homes?refinement_paths%5B%5D=%2Fhomes&place_id=ChIJD8MDkkA5no8Rk_jBLF6fGLs&checkin=2026-01-15&checkout=2026-01-20&adults=6&query=Tamarindo%2C%20Costa%20Rica&flexible_trip_lengths%5B%5D=one_week&monthly_start_date=2025-09-01&monthly_length=3&monthly_end_date=2025-12-01&search_mode=regular_search&price_filter_input_type=2&price_filter_num_nights=5&channel=EXPLORE&source=structured_search_input_header&search_type=unknown" target="_blank" rel="noopener">Airbnb</a></li><li>🏝️ Resort → <a href="https://www.riu.com/en/hotel/costa-rica/guanacaste/hotel-riu-guanacaste/" target="_blank" rel="noopener">Riu Guanacaste</a></li><li>🏝️ Resort → <a href="https://www.riu.com/en/hotel/costa-rica/guanacaste/hotel-riu-palace-costa-rica/" target="_blank" rel="noopener">Riu Palace Costa Rica</a></li></ul>             <li><b>🍸 Nightlife</b>: Beach clubs, breweries, late‑night spots on the strip.</li>             <li><b>🛡️ Safety</b>: Watch petty theft; keep valuables close after dark.</li>             <li><b>🥾 Excursions</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Sunset+Catamaran+%28departure+beach%29+Tamarindo" target="_blank" rel="noopener">Sunset Catamaran (departure beach)</a></li><li><a href="https://www.google.com/search?q=Estuary+Boat%2FKayak+%28mangroves%29+Tamarindo" target="_blank" rel="noopener">Estuary Boat/Kayak (mangroves)</a></li><li><a href="https://www.google.com/search?q=Las+Baulas+National+Park+%2F+Playa+Grande+Tamarindo" target="_blank" rel="noopener">Las Baulas National Park / Playa Grande</a></li><li><a href="https://www.google.com/search?q=Rinc%C3%B3n+de+la+Vieja+National+Park+Tamarindo" target="_blank" rel="noopener">Rincón de la Vieja National Park</a></li></ul>             <br>             <li><b>🧭 Optional Day Trips</b></li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Rinc%C3%B3n+de+la+Vieja+National+Park+Tamarindo" target="_blank" rel="noopener">Rincón de la Vieja National Park</a></li><li><a href="https://www.google.com/search?q=La+Fortuna+%2F+Arenal+Tamarindo" target="_blank" rel="noopener">La Fortuna / Arenal</a></li></ul>         </ul>     </div>     </div>`)[0];
-            popup_e42f02f7b27c5a1bd64964b5df47e22c.setContent(html_6323d590ca4040660e999535208491ba);
+            var html_e3b065805021d7fa2ed55053e301df49 = $(`<div id="html_e3b065805021d7fa2ed55053e301df49" style="width: 100.0%; height: 100.0%;">     <div class="cr-popup" style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">         <div class="cr-title" style="font-weight: 800; font-size: 20px;"><b>Tamarindo</b></div>         <ul class="cr-list" style="padding-left: 16px; margin: 0; font-size: 16px; line-height: 1.5; color: #111;">             <li><b>🎭 Vibe</b>: Surf town + sunset bars, very walkable.</li>             <li><b>✅ Why it fits</b>: Blend of beach, restaurants, and nightlife in Guanacaste.</li>             <li><b>✈️ Airport</b>: LIR (~1.5 hr) • TNO (local)</li>             <li><b>🛏️ Stay types</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li>🏨 <a href="https://www.hotels.com/Hotel-Search?destination=Tamarindo%2C%20Guanacaste%2C%20Costa%20Rica&startDate=2026-01-15&endDate=2026-01-20&upsellingNumNightsAdded=&theme=&userIntent=&semdtl=&upsellingDiscountTypeAdded=&categorySearch=&useRewards=false&sort=RECOMMENDED&paymentType=PAY_LATER&stay_options_group=hotels_option&guestRating=40&regionId=500187&adults=2&children=&flexibility=1_DAY&latLong&pwaDialog=&daysInFuture&stayLength" target="_blank" rel="noopener">Hotels</a></li><li>🏡 <a href="https://www.airbnb.com/s/Tamarindo--Costa-Rica/homes?refinement_paths%5B%5D=%2Fhomes&place_id=ChIJD8MDkkA5no8Rk_jBLF6fGLs&checkin=2026-01-15&checkout=2026-01-20&adults=6&query=Tamarindo%2C%20Costa%20Rica&flexible_trip_lengths%5B%5D=one_week&monthly_start_date=2025-09-01&monthly_length=3&monthly_end_date=2025-12-01&search_mode=regular_search&price_filter_input_type=2&price_filter_num_nights=5&channel=EXPLORE&source=structured_search_input_header&search_type=unknown" target="_blank" rel="noopener">Airbnb</a></li><li>🏝️ Resort → <a href="https://www.riu.com/en/hotel/costa-rica/guanacaste/hotel-riu-guanacaste/" target="_blank" rel="noopener">Riu Guanacaste</a></li><li>🏝️ Resort → <a href="https://www.riu.com/en/hotel/costa-rica/guanacaste/hotel-riu-palace-costa-rica/" target="_blank" rel="noopener">Riu Palace Costa Rica</a></li></ul>             <li><b>🍸 Nightlife</b>: Beach clubs, breweries, late‑night spots on the strip.</li>             <li><b>🛡️ Safety</b>: Watch petty theft; keep valuables close after dark.</li>             <li><b>🥾 Excursions</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Sunset+Catamaran+%28departure+beach%29+Tamarindo" target="_blank" rel="noopener">Sunset Catamaran (departure beach)</a></li><li><a href="https://www.google.com/search?q=Estuary+Boat%2FKayak+%28mangroves%29+Tamarindo" target="_blank" rel="noopener">Estuary Boat/Kayak (mangroves)</a></li><li><a href="https://www.google.com/search?q=Las+Baulas+National+Park+%2F+Playa+Grande+Tamarindo" target="_blank" rel="noopener">Las Baulas National Park / Playa Grande</a></li><li><a href="https://www.google.com/search?q=Rinc%C3%B3n+de+la+Vieja+National+Park+Tamarindo" target="_blank" rel="noopener">Rincón de la Vieja National Park</a></li></ul>             <br>             <li><b>🧭 Optional Day Trips</b></li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Rinc%C3%B3n+de+la+Vieja+National+Park+Tamarindo" target="_blank" rel="noopener">Rincón de la Vieja National Park</a></li><li><a href="https://www.google.com/search?q=La+Fortuna+%2F+Arenal+Tamarindo" target="_blank" rel="noopener">La Fortuna / Arenal</a></li></ul>         </ul>     </div>     </div>`)[0];
+            popup_6444577abadf974728162582f5b726e2.setContent(html_e3b065805021d7fa2ed55053e301df49);
         
 
-        marker_a6f50d97d4f0e523aa38fdc1b2bd84d5.bindPopup(popup_e42f02f7b27c5a1bd64964b5df47e22c)
+        marker_a14e316f692a4aea84ae2b9ec40c25d8.bindPopup(popup_6444577abadf974728162582f5b726e2)
         ;
 
         
     
     
-            var circle_marker_139677c1f806115fe175cc9f5a8e8daf = L.circleMarker(
+            var circle_marker_8cba62a8c4b56a6d21491a96c3473c18 = L.circleMarker(
                 [9.62, -84.63],
                 {"bubblingMouseEvents": true, "color": "#ffffff", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffffff", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 3}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var marker_505ae12acfff4245fbe3e3af7856f365 = L.marker(
+            var marker_7c5d285ca169785c317c8f062c3a6c01 = L.marker(
                 [9.62, -84.63],
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var div_icon_276d9dc9a9072a3309bfac54a9c19650 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 16px; font-weight: 800; color: #ffffff; text-shadow: 0 0 6px rgba(0,0,0,0.85); transform: translate(16px, -6px);\"\u003eJac\u00f3\u003c/div\u003e"});
-            marker_505ae12acfff4245fbe3e3af7856f365.setIcon(div_icon_276d9dc9a9072a3309bfac54a9c19650);
+            var div_icon_282dc58684aa0476e02af0d33daea0d3 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 16px; font-weight: 800; color: #ffffff; text-shadow: 0 0 6px rgba(0,0,0,0.85); transform: translate(16px, -6px);\"\u003eJac\u00f3\u003c/div\u003e"});
+            marker_7c5d285ca169785c317c8f062c3a6c01.setIcon(div_icon_282dc58684aa0476e02af0d33daea0d3);
         
     
-            var marker_3cb12c6a44e5104d388e411e493df41b = L.marker(
+            var marker_703393361cec6fc26d2518aa16161186 = L.marker(
                 [9.62, -84.63],
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var icon_4a751ebd2b33e35ecdf202328d8bbb23 = L.AwesomeMarkers.icon(
+            var icon_4b829b5ce427a45cb748391c40967bfa = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "white", "prefix": "glyphicon"}
             );
-            marker_3cb12c6a44e5104d388e411e493df41b.setIcon(icon_4a751ebd2b33e35ecdf202328d8bbb23);
+            marker_703393361cec6fc26d2518aa16161186.setIcon(icon_4b829b5ce427a45cb748391c40967bfa);
         
     
-        var popup_3375fcff6bc53e6c16672808538c0517 = L.popup({"maxWidth": 420});
+        var popup_16a4948fdf4ef106c3be2614362e1326 = L.popup({"maxWidth": 420});
 
         
-            var html_2e582f3b5458a080a01bdc5ad21be6b9 = $(`<div id="html_2e582f3b5458a080a01bdc5ad21be6b9" style="width: 100.0%; height: 100.0%;">     <div class="cr-popup" style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">         <div class="cr-title" style="font-weight: 800; font-size: 20px;"><b>Jacó</b></div>         <ul class="cr-list" style="padding-left: 16px; margin: 0; font-size: 16px; line-height: 1.5; color: #111;">             <li><b>🎭 Vibe</b>: Lively party/surf town on the Central Pacific.</li>             <li><b>✅ Why it fits</b>: Most concentrated nightlife on the coast; easy from SJO.</li>             <li><b>✈️ Airport</b>: SJO (~1.5–2.5 hr)</li>             <li><b>🛏️ Stay types</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li>🏨 <a href="https://www.hotels.com/Hotel-Search?destination=Jac%C3%B3%2C%20Puntarenas%20Province%2C%20Costa%20Rica&startDate=2026-01-15&endDate=2026-01-20&upsellingNumNightsAdded=&theme=&userIntent=&semdtl=&upsellingDiscountTypeAdded=&categorySearch=&useRewards=false&sort=RECOMMENDED&adults=2&children=&latLong=&daysInFuture&stayLength&paymentType=PAY_LATER&stay_options_group=hotels_option&regionId=6052932&guestRating=40&flexibility=1_DAY&pwaDialog=" target="_blank" rel="noopener">Hotels</a></li><li>🏡 <a href="https://www.airbnb.com/s/Jaco--Costa-Rica/homes?refinement_paths%5B%5D=%2Fhomes&place_id=ChIJgwxhuWrHoY8R9t2Ppf9-8xs&checkin=2026-01-15&checkout=2026-01-20&adults=6&query=Jaco%2C%20Costa%20Rica&flexible_trip_lengths%5B%5D=one_week&monthly_start_date=2025-09-01&monthly_length=3&monthly_end_date=2025-12-01&search_mode=regular_search&price_filter_input_type=2&price_filter_num_nights=5&channel=EXPLORE&source=structured_search_input_header&search_type=unknown" target="_blank" rel="noopener">Airbnb</a></li><li>🏝️ Resort → <a href="https://www.crocsresortcasino.com/" target="_blank" rel="noopener">Croc’s Resort & Casino</a></li><li>🏝️ Resort → <a href="https://www.bestwestern.com/en_US/book/hotels-in-jaco-beach/best-western-jaco-beach-all-inclusive-resort/propertyCode.70602.html" target="_blank" rel="noopener">Best Western Jacó Beach</a></li></ul>             <li><b>🍸 Nightlife</b>: Clubs, bars, and late eats along Pastor Díaz Ave.</li>             <li><b>🛡️ Safety</b>: Busy scene—mind belongings; avoid isolated areas late.</li>             <li><b>🥾 Excursions</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=ATV+Jungle%2FWaterfall+Tours+Jac%C3%B3" target="_blank" rel="noopener">ATV Jungle/Waterfall Tours</a></li><li><a href="https://www.google.com/search?q=T%C3%A1rcoles+Crocodile+Safari+Jac%C3%B3" target="_blank" rel="noopener">Tárcoles Crocodile Safari</a></li><li><a href="https://www.google.com/search?q=Carara+National+Park+Jac%C3%B3" target="_blank" rel="noopener">Carara National Park</a></li><li><a href="https://www.google.com/search?q=Horseback+Waterfall+Ride+Jac%C3%B3" target="_blank" rel="noopener">Horseback Waterfall Ride</a></li></ul>             <br>             <li><b>🧭 Optional Day Trips</b></li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Manuel+Antonio+Jac%C3%B3" target="_blank" rel="noopener">Manuel Antonio</a></li><li><a href="https://www.google.com/search?q=Monteverde+Cloud+Forest+Jac%C3%B3" target="_blank" rel="noopener">Monteverde Cloud Forest</a></li></ul>         </ul>     </div>     </div>`)[0];
-            popup_3375fcff6bc53e6c16672808538c0517.setContent(html_2e582f3b5458a080a01bdc5ad21be6b9);
+            var html_57a7f4191c6bc5618501b2dec9587367 = $(`<div id="html_57a7f4191c6bc5618501b2dec9587367" style="width: 100.0%; height: 100.0%;">     <div class="cr-popup" style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">         <div class="cr-title" style="font-weight: 800; font-size: 20px;"><b>Jacó</b></div>         <ul class="cr-list" style="padding-left: 16px; margin: 0; font-size: 16px; line-height: 1.5; color: #111;">             <li><b>🎭 Vibe</b>: Lively party/surf town on the Central Pacific.</li>             <li><b>✅ Why it fits</b>: Most concentrated nightlife on the coast; easy from SJO.</li>             <li><b>✈️ Airport</b>: SJO (~1.5–2.5 hr)</li>             <li><b>🛏️ Stay types</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li>🏨 <a href="https://www.hotels.com/Hotel-Search?destination=Jac%C3%B3%2C%20Puntarenas%20Province%2C%20Costa%20Rica&startDate=2026-01-15&endDate=2026-01-20&upsellingNumNightsAdded=&theme=&userIntent=&semdtl=&upsellingDiscountTypeAdded=&categorySearch=&useRewards=false&sort=RECOMMENDED&adults=2&children=&latLong=&daysInFuture&stayLength&paymentType=PAY_LATER&stay_options_group=hotels_option&regionId=6052932&guestRating=40&flexibility=1_DAY&pwaDialog=" target="_blank" rel="noopener">Hotels</a></li><li>🏡 <a href="https://www.airbnb.com/s/Jaco--Costa-Rica/homes?refinement_paths%5B%5D=%2Fhomes&place_id=ChIJgwxhuWrHoY8R9t2Ppf9-8xs&checkin=2026-01-15&checkout=2026-01-20&adults=6&query=Jaco%2C%20Costa%20Rica&flexible_trip_lengths%5B%5D=one_week&monthly_start_date=2025-09-01&monthly_length=3&monthly_end_date=2025-12-01&search_mode=regular_search&price_filter_input_type=2&price_filter_num_nights=5&channel=EXPLORE&source=structured_search_input_header&search_type=unknown" target="_blank" rel="noopener">Airbnb</a></li><li>🏝️ Resort → <a href="https://www.crocsresortcasino.com/" target="_blank" rel="noopener">Croc’s Resort & Casino</a></li><li>🏝️ Resort → <a href="https://www.bestwestern.com/en_US/book/hotels-in-jaco-beach/best-western-jaco-beach-all-inclusive-resort/propertyCode.70602.html" target="_blank" rel="noopener">Best Western Jacó Beach</a></li></ul>             <li><b>🍸 Nightlife</b>: Clubs, bars, and late eats along Pastor Díaz Ave.</li>             <li><b>🛡️ Safety</b>: Busy scene—mind belongings; avoid isolated areas late.</li>             <li><b>🥾 Excursions</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=ATV+Jungle%2FWaterfall+Tours+Jac%C3%B3" target="_blank" rel="noopener">ATV Jungle/Waterfall Tours</a></li><li><a href="https://www.google.com/search?q=T%C3%A1rcoles+Crocodile+Safari+Jac%C3%B3" target="_blank" rel="noopener">Tárcoles Crocodile Safari</a></li><li><a href="https://www.google.com/search?q=Carara+National+Park+Jac%C3%B3" target="_blank" rel="noopener">Carara National Park</a></li><li><a href="https://www.google.com/search?q=Horseback+Waterfall+Ride+Jac%C3%B3" target="_blank" rel="noopener">Horseback Waterfall Ride</a></li></ul>             <br>             <li><b>🧭 Optional Day Trips</b></li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Manuel+Antonio+Jac%C3%B3" target="_blank" rel="noopener">Manuel Antonio</a></li><li><a href="https://www.google.com/search?q=Monteverde+Cloud+Forest+Jac%C3%B3" target="_blank" rel="noopener">Monteverde Cloud Forest</a></li></ul>         </ul>     </div>     </div>`)[0];
+            popup_16a4948fdf4ef106c3be2614362e1326.setContent(html_57a7f4191c6bc5618501b2dec9587367);
         
 
-        marker_3cb12c6a44e5104d388e411e493df41b.bindPopup(popup_3375fcff6bc53e6c16672808538c0517)
+        marker_703393361cec6fc26d2518aa16161186.bindPopup(popup_16a4948fdf4ef106c3be2614362e1326)
         ;
 
         
     
     
-            var circle_marker_0e8f6e63c81b1951df0c407998a49b90 = L.circleMarker(
+            var circle_marker_93dd69840bda0a906d56ca94eec29831 = L.circleMarker(
                 [9.39, -84.14],
                 {"bubblingMouseEvents": true, "color": "#ffffff", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffffff", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 3}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var marker_6b382fc976f17bc07f7e999df6f7d4a6 = L.marker(
+            var marker_f2489771f95ff5d8b6b78f4e1d92279a = L.marker(
                 [9.39, -84.14],
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var div_icon_97745e9b6852ad7fb8db290b60810fb2 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 16px; font-weight: 800; color: #ffffff; text-shadow: 0 0 6px rgba(0,0,0,0.85); transform: translate(16px, 6px);\"\u003eManuel Antonio\u003c/div\u003e"});
-            marker_6b382fc976f17bc07f7e999df6f7d4a6.setIcon(div_icon_97745e9b6852ad7fb8db290b60810fb2);
+            var div_icon_e78b49cd6c3ee566df6c0d47e6c7a928 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 16px; font-weight: 800; color: #ffffff; text-shadow: 0 0 6px rgba(0,0,0,0.85); transform: translate(16px, 6px);\"\u003eManuel Antonio\u003c/div\u003e"});
+            marker_f2489771f95ff5d8b6b78f4e1d92279a.setIcon(div_icon_e78b49cd6c3ee566df6c0d47e6c7a928);
         
     
-            var marker_229bfaaed55d537baa0984cf7169662e = L.marker(
+            var marker_3339f60be4c799d4503269db5304be1c = L.marker(
                 [9.39, -84.14],
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var icon_7a76453adb120efe5bc2e2cd66eb8e61 = L.AwesomeMarkers.icon(
+            var icon_d6aecf8b14f1040e1379e68113ca64a3 = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "white", "prefix": "glyphicon"}
             );
-            marker_229bfaaed55d537baa0984cf7169662e.setIcon(icon_7a76453adb120efe5bc2e2cd66eb8e61);
+            marker_3339f60be4c799d4503269db5304be1c.setIcon(icon_d6aecf8b14f1040e1379e68113ca64a3);
         
     
-        var popup_9297e347eb98f934484bcb7116d06399 = L.popup({"maxWidth": 420});
+        var popup_2f9d86e02655172a80293a7cf6b3bc63 = L.popup({"maxWidth": 420});
 
         
-            var html_2a590b961e0c4e4955649059a9a9cedb = $(`<div id="html_2a590b961e0c4e4955649059a9a9cedb" style="width: 100.0%; height: 100.0%;">     <div class="cr-popup" style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">         <div class="cr-title" style="font-weight: 800; font-size: 20px;"><b>Manuel Antonio</b></div>         <ul class="cr-list" style="padding-left: 16px; margin: 0; font-size: 16px; line-height: 1.5; color: #111;">             <li><b>🎭 Vibe</b>: Scenic beaches + wildlife at the national park.</li>             <li><b>✅ Why it fits</b>: Great restaurants & views; calmer than Jacó.</li>             <li><b>✈️ Airport</b>: SJO (~3 hr) • XQP (local)</li>             <li><b>🛏️ Stay types</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li>🏨 <a href="https://www.hotels.com/Hotel-Search?adults=2&categorySearch=&children=&daysInFuture&destination=Manuel%20Antonio%2C%20Quepos%2C%20Puntarenas%20Province%2C%20Costa%20Rica&endDate=2026-01-20&semdtl=&sort=RECOMMENDED&startDate=2026-01-15&stayLength&theme=&upsellingDiscountTypeAdded=&upsellingNumNightsAdded=&useRewards=false&userIntent=&paymentType=PAY_LATER&guestRating=40&stay_options_group=hotels_option&regionId=601060&flexibility=1_DAY&latLong&pwaDialog=&latLong%C2%AEionId=601060" target="_blank" rel="noopener">Hotels</a></li><li>🏡 <a href="https://www.airbnb.com/s/Manuel-Antonio--Puntarenas--Costa-Rica/homes?refinement_paths%5B%5D=%2Fhomes&checkin=2026-01-15&checkout=2026-01-20&adults=6&flexible_trip_lengths%5B%5D=one_week&monthly_start_date=2025-09-01&monthly_length=3&monthly_end_date=2025-12-01&price_filter_input_type=2&price_filter_num_nights=5&channel=EXPLORE&source=structured_search_input_header&search_type=autocomplete_click&place_id=ChIJx1lfVH1xoY8RzroyZ2opBls&location_bb=QRacT8KoS3VBFm7gwqhSIw%3D%3D&acp_id=b7393cc6-3fa4-45aa-a7c6-9a5c1bc39048&date_picker_type=calendar" target="_blank" rel="noopener">Airbnb</a></li><li>🏝️ Resort → <a href="https://www.hotelparador.com/" target="_blank" rel="noopener">Parador Nature Resort & Spa</a></li></ul>             <li><b>🍸 Nightlife</b>: Cocktail bars & live music; chill vibe.</li>             <li><b>🛡️ Safety</b>: Tourist zone; standard precautions.</li>             <li><b>🥾 Excursions</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Manuel+Antonio+National+Park+entrance+Manuel+Antonio" target="_blank" rel="noopener">Manuel Antonio National Park entrance</a></li><li><a href="https://www.google.com/search?q=Quepos+Marina+dolphin%2Fsnorkel+cruise+Manuel+Antonio" target="_blank" rel="noopener">Quepos Marina dolphin/snorkel cruise</a></li><li><a href="https://www.google.com/search?q=Damas+Island+Mangrove+Kayak+Manuel+Antonio" target="_blank" rel="noopener">Damas Island Mangrove Kayak</a></li><li><a href="https://www.google.com/search?q=Savegre+River+Whitewater+Rafting+Manuel+Antonio" target="_blank" rel="noopener">Savegre River Whitewater Rafting</a></li><li><a href="https://www.google.com/search?q=Naranjo+River+Whitewater+Rafting+Manuel+Antonio" target="_blank" rel="noopener">Naranjo River Whitewater Rafting</a></li></ul>             <br>             <li><b>🧭 Optional Day Trips</b></li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Jac%C3%B3+Manuel+Antonio" target="_blank" rel="noopener">Jacó</a></li><li><a href="https://www.google.com/search?q=Dominical+Manuel+Antonio" target="_blank" rel="noopener">Dominical</a></li><li><a href="https://www.google.com/search?q=Uvita+%28Whale%E2%80%99s+Tail+%2F+Marino+Ballena+NP%29+Manuel+Antonio" target="_blank" rel="noopener">Uvita (Whale’s Tail / Marino Ballena NP)</a></li></ul>         </ul>     </div>     </div>`)[0];
-            popup_9297e347eb98f934484bcb7116d06399.setContent(html_2a590b961e0c4e4955649059a9a9cedb);
+            var html_b336c3060fee9708ebb894759fcfe125 = $(`<div id="html_b336c3060fee9708ebb894759fcfe125" style="width: 100.0%; height: 100.0%;">     <div class="cr-popup" style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">         <div class="cr-title" style="font-weight: 800; font-size: 20px;"><b>Manuel Antonio</b></div>         <ul class="cr-list" style="padding-left: 16px; margin: 0; font-size: 16px; line-height: 1.5; color: #111;">             <li><b>🎭 Vibe</b>: Scenic beaches + wildlife at the national park.</li>             <li><b>✅ Why it fits</b>: Great restaurants & views; calmer than Jacó.</li>             <li><b>✈️ Airport</b>: SJO (~3 hr) • XQP (local)</li>             <li><b>🛏️ Stay types</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li>🏨 <a href="https://www.hotels.com/Hotel-Search?adults=2&categorySearch=&children=&daysInFuture&destination=Manuel%20Antonio%2C%20Quepos%2C%20Puntarenas%20Province%2C%20Costa%20Rica&endDate=2026-01-20&semdtl=&sort=RECOMMENDED&startDate=2026-01-15&stayLength&theme=&upsellingDiscountTypeAdded=&upsellingNumNightsAdded=&useRewards=false&userIntent=&paymentType=PAY_LATER&guestRating=40&stay_options_group=hotels_option&regionId=601060&flexibility=1_DAY&latLong&pwaDialog=&latLong%C2%AEionId=601060" target="_blank" rel="noopener">Hotels</a></li><li>🏡 <a href="https://www.airbnb.com/s/Manuel-Antonio--Puntarenas--Costa-Rica/homes?refinement_paths%5B%5D=%2Fhomes&checkin=2026-01-15&checkout=2026-01-20&adults=6&flexible_trip_lengths%5B%5D=one_week&monthly_start_date=2025-09-01&monthly_length=3&monthly_end_date=2025-12-01&price_filter_input_type=2&price_filter_num_nights=5&channel=EXPLORE&source=structured_search_input_header&search_type=autocomplete_click&place_id=ChIJx1lfVH1xoY8RzroyZ2opBls&location_bb=QRacT8KoS3VBFm7gwqhSIw%3D%3D&acp_id=b7393cc6-3fa4-45aa-a7c6-9a5c1bc39048&date_picker_type=calendar" target="_blank" rel="noopener">Airbnb</a></li><li>🏝️ Resort → <a href="https://www.hotelparador.com/" target="_blank" rel="noopener">Parador Nature Resort & Spa</a></li></ul>             <li><b>🍸 Nightlife</b>: Cocktail bars & live music; chill vibe.</li>             <li><b>🛡️ Safety</b>: Tourist zone; standard precautions.</li>             <li><b>🥾 Excursions</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Manuel+Antonio+National+Park+entrance+Manuel+Antonio" target="_blank" rel="noopener">Manuel Antonio National Park entrance</a></li><li><a href="https://www.google.com/search?q=Quepos+Marina+dolphin%2Fsnorkel+cruise+Manuel+Antonio" target="_blank" rel="noopener">Quepos Marina dolphin/snorkel cruise</a></li><li><a href="https://www.google.com/search?q=Damas+Island+Mangrove+Kayak+Manuel+Antonio" target="_blank" rel="noopener">Damas Island Mangrove Kayak</a></li><li><a href="https://www.google.com/search?q=Savegre+River+Whitewater+Rafting+Manuel+Antonio" target="_blank" rel="noopener">Savegre River Whitewater Rafting</a></li><li><a href="https://www.google.com/search?q=Naranjo+River+Whitewater+Rafting+Manuel+Antonio" target="_blank" rel="noopener">Naranjo River Whitewater Rafting</a></li></ul>             <br>             <li><b>🧭 Optional Day Trips</b></li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Jac%C3%B3+Manuel+Antonio" target="_blank" rel="noopener">Jacó</a></li><li><a href="https://www.google.com/search?q=Dominical+Manuel+Antonio" target="_blank" rel="noopener">Dominical</a></li><li><a href="https://www.google.com/search?q=Uvita+%28Whale%E2%80%99s+Tail+%2F+Marino+Ballena+NP%29+Manuel+Antonio" target="_blank" rel="noopener">Uvita (Whale’s Tail / Marino Ballena NP)</a></li></ul>         </ul>     </div>     </div>`)[0];
+            popup_2f9d86e02655172a80293a7cf6b3bc63.setContent(html_b336c3060fee9708ebb894759fcfe125);
         
 
-        marker_229bfaaed55d537baa0984cf7169662e.bindPopup(popup_9297e347eb98f934484bcb7116d06399)
+        marker_3339f60be4c799d4503269db5304be1c.bindPopup(popup_2f9d86e02655172a80293a7cf6b3bc63)
         ;
 
         
     
     
-            var circle_marker_7915e8d8a5f2a4c88df9964abedc15c5 = L.circleMarker(
+            var circle_marker_c5bed86528ca689a9734f7214d39ab39 = L.circleMarker(
                 [9.66, -82.76],
                 {"bubblingMouseEvents": true, "color": "#ffffff", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffffff", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 3}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var marker_d349590467275c1e4fad607aaa9ca579 = L.marker(
+            var marker_0cc725522e2b452f7f5105b563d88d2e = L.marker(
                 [9.66, -82.76],
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var div_icon_bd7ce1e73c32a74c27b5a46f65f7f95a = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 16px; font-weight: 800; color: #ffffff; text-shadow: 0 0 6px rgba(0,0,0,0.85); transform: translate(16px, 6px);\"\u003ePuerto Viejo\u003c/div\u003e"});
-            marker_d349590467275c1e4fad607aaa9ca579.setIcon(div_icon_bd7ce1e73c32a74c27b5a46f65f7f95a);
+            var div_icon_9f0209ddc3a54341c33c7c78fa515ad6 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 16px; font-weight: 800; color: #ffffff; text-shadow: 0 0 6px rgba(0,0,0,0.85); transform: translate(16px, 6px);\"\u003ePuerto Viejo\u003c/div\u003e"});
+            marker_0cc725522e2b452f7f5105b563d88d2e.setIcon(div_icon_9f0209ddc3a54341c33c7c78fa515ad6);
         
     
-            var marker_820e4a04f18945fbd0fdef251310c7c5 = L.marker(
+            var marker_92823205f4b5cd6f6168e9a6ee97f921 = L.marker(
                 [9.66, -82.76],
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var icon_dba7ecb05fbd7400e192d9b9c2186096 = L.AwesomeMarkers.icon(
+            var icon_3c16a40ca0bd6a6d7040a56a133ecc5f = L.AwesomeMarkers.icon(
                 {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "white", "prefix": "glyphicon"}
             );
-            marker_820e4a04f18945fbd0fdef251310c7c5.setIcon(icon_dba7ecb05fbd7400e192d9b9c2186096);
+            marker_92823205f4b5cd6f6168e9a6ee97f921.setIcon(icon_3c16a40ca0bd6a6d7040a56a133ecc5f);
         
     
-        var popup_f161a8f6bbb3c36697b4ea68c9bd7c6b = L.popup({"maxWidth": 420});
+        var popup_32220fe469b1292ddc22e9efa33058bb = L.popup({"maxWidth": 420});
 
         
-            var html_31cbfa93da415c9d22e01bd23b9cd9d9 = $(`<div id="html_31cbfa93da415c9d22e01bd23b9cd9d9" style="width: 100.0%; height: 100.0%;">     <div class="cr-popup" style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">         <div class="cr-title" style="font-weight: 800; font-size: 20px;"><b>Puerto Viejo</b></div>         <ul class="cr-list" style="padding-left: 16px; margin: 0; font-size: 16px; line-height: 1.5; color: #111;">             <li><b>🎭 Vibe</b>: Afro‑Caribbean vibe—reggae, cafés, great food.</li>             <li><b>✅ Why it fits</b>: Distinct culture & nightlife; beaches like Cocles.</li>             <li><b>✈️ Airport</b>: SJO (~5–6 hr drive)</li>             <li><b>🛏️ Stay types</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li>🏨 <a href="https://www.hotels.com/Hotel-Search?adults=2&categorySearch=&children=&daysInFuture&destination=Puerto%20Viejo%20de%20Talamanca%2C%20Cahuita%2C%20Lim%C3%B3n%20Province%2C%20Costa%20Rica&endDate=2026-01-20&semdtl=&sort=RECOMMENDED&startDate=2026-01-15&stayLength&theme=&upsellingDiscountTypeAdded=&upsellingNumNightsAdded=&useRewards=false&userIntent=&paymentType=PAY_LATER&guestRating=40&stay_options_group=hotels_option&regionId=177983&flexibility=1_DAY&latLong&pwaDialog=&latLong%C2%AEionId=177983" target="_blank" rel="noopener">Hotels</a></li><li>🏡 <a href="https://www.airbnb.com/s/Puerto-Viejo-de-Talamanca--Limon--Costa-Rica/homes?refinement_paths%5B%5D=%2Fhomes&acp_id=46e3557c-f5fb-46a7-b990-7b9fd0287d9b&date_picker_type=calendar&place_id=ChIJFd-e6wxQpo8RRbmWoq2O61M&location_bb=QRqPYsKle3hBGlWBwqWHrA%3D%3D&checkin=2026-01-15&checkout=2026-01-20&adults=6&source=structured_search_input_header&search_type=autocomplete_click" target="_blank" rel="noopener">Airbnb</a></li></ul>             <li><b>🍸 Nightlife</b>: Live music & beach bars; chill clubs.</li>             <li><b>🛡️ Safety</b>: Use taxis at night; rain can make roads slick.</li>             <li><b>🥾 Excursions</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Cahuita+National+Park+Puerto+Viejo" target="_blank" rel="noopener">Cahuita National Park</a></li><li><a href="https://www.google.com/search?q=Jaguar+Rescue+Center+Puerto+Viejo" target="_blank" rel="noopener">Jaguar Rescue Center</a></li><li><a href="https://www.google.com/search?q=Punta+Uva+Puerto+Viejo" target="_blank" rel="noopener">Punta Uva</a></li><li><a href="https://www.google.com/search?q=Gandoca%E2%80%91Manzanillo+Wildlife+Refuge+Puerto+Viejo" target="_blank" rel="noopener">Gandoca‑Manzanillo Wildlife Refuge</a></li><li><a href="https://www.google.com/search?q=Bribri+Chocolate+%2F+Indigenous+Cultural+Tour+Puerto+Viejo" target="_blank" rel="noopener">Bribri Chocolate / Indigenous Cultural Tour</a></li><li><a href="https://www.google.com/search?q=Salsa+Brava+Surf+Break+Puerto+Viejo" target="_blank" rel="noopener">Salsa Brava Surf Break</a></li></ul>             <br>             <li><b>🧭 Optional Day Trips</b></li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Cahuita+Puerto+Viejo" target="_blank" rel="noopener">Cahuita</a></li><li><a href="https://www.google.com/search?q=Tortuguero+Puerto+Viejo" target="_blank" rel="noopener">Tortuguero</a></li></ul>         </ul>     </div>     </div>`)[0];
-            popup_f161a8f6bbb3c36697b4ea68c9bd7c6b.setContent(html_31cbfa93da415c9d22e01bd23b9cd9d9);
+            var html_08030e1e99fef395185340961bbbd7d9 = $(`<div id="html_08030e1e99fef395185340961bbbd7d9" style="width: 100.0%; height: 100.0%;">     <div class="cr-popup" style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">         <div class="cr-title" style="font-weight: 800; font-size: 20px;"><b>Puerto Viejo</b></div>         <ul class="cr-list" style="padding-left: 16px; margin: 0; font-size: 16px; line-height: 1.5; color: #111;">             <li><b>🎭 Vibe</b>: Afro‑Caribbean vibe—reggae, cafés, great food.</li>             <li><b>✅ Why it fits</b>: Distinct culture & nightlife; beaches like Cocles.</li>             <li><b>✈️ Airport</b>: SJO (~5–6 hr drive)</li>             <li><b>🛏️ Stay types</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li>🏨 <a href="https://www.hotels.com/Hotel-Search?adults=2&categorySearch=&children=&daysInFuture&destination=Puerto%20Viejo%20de%20Talamanca%2C%20Cahuita%2C%20Lim%C3%B3n%20Province%2C%20Costa%20Rica&endDate=2026-01-20&semdtl=&sort=RECOMMENDED&startDate=2026-01-15&stayLength&theme=&upsellingDiscountTypeAdded=&upsellingNumNightsAdded=&useRewards=false&userIntent=&paymentType=PAY_LATER&guestRating=40&stay_options_group=hotels_option&regionId=177983&flexibility=1_DAY&latLong&pwaDialog=&latLong%C2%AEionId=177983" target="_blank" rel="noopener">Hotels</a></li><li>🏡 <a href="https://www.airbnb.com/s/Puerto-Viejo-de-Talamanca--Limon--Costa-Rica/homes?refinement_paths%5B%5D=%2Fhomes&acp_id=46e3557c-f5fb-46a7-b990-7b9fd0287d9b&date_picker_type=calendar&place_id=ChIJFd-e6wxQpo8RRbmWoq2O61M&location_bb=QRqPYsKle3hBGlWBwqWHrA%3D%3D&checkin=2026-01-15&checkout=2026-01-20&adults=6&source=structured_search_input_header&search_type=autocomplete_click" target="_blank" rel="noopener">Airbnb</a></li></ul>             <li><b>🍸 Nightlife</b>: Live music & beach bars; chill clubs.</li>             <li><b>🛡️ Safety</b>: Use taxis at night; rain can make roads slick.</li>             <li><b>🥾 Excursions</b>:</li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Cahuita+National+Park+Puerto+Viejo" target="_blank" rel="noopener">Cahuita National Park</a></li><li><a href="https://www.google.com/search?q=Jaguar+Rescue+Center+Puerto+Viejo" target="_blank" rel="noopener">Jaguar Rescue Center</a></li><li><a href="https://www.google.com/search?q=Punta+Uva+Puerto+Viejo" target="_blank" rel="noopener">Punta Uva</a></li><li><a href="https://www.google.com/search?q=Gandoca%E2%80%91Manzanillo+Wildlife+Refuge+Puerto+Viejo" target="_blank" rel="noopener">Gandoca‑Manzanillo Wildlife Refuge</a></li><li><a href="https://www.google.com/search?q=Bribri+Chocolate+%2F+Indigenous+Cultural+Tour+Puerto+Viejo" target="_blank" rel="noopener">Bribri Chocolate / Indigenous Cultural Tour</a></li><li><a href="https://www.google.com/search?q=Salsa+Brava+Surf+Break+Puerto+Viejo" target="_blank" rel="noopener">Salsa Brava Surf Break</a></li></ul>             <br>             <li><b>🧭 Optional Day Trips</b></li>                 <ul class="cr-sublist" style="padding-left: 16px; margin: 0;"><li><a href="https://www.google.com/search?q=Cahuita+Puerto+Viejo" target="_blank" rel="noopener">Cahuita</a></li><li><a href="https://www.google.com/search?q=Tortuguero+Puerto+Viejo" target="_blank" rel="noopener">Tortuguero</a></li></ul>         </ul>     </div>     </div>`)[0];
+            popup_32220fe469b1292ddc22e9efa33058bb.setContent(html_08030e1e99fef395185340961bbbd7d9);
         
 
-        marker_820e4a04f18945fbd0fdef251310c7c5.bindPopup(popup_f161a8f6bbb3c36697b4ea68c9bd7c6b)
+        marker_92823205f4b5cd6f6168e9a6ee97f921.bindPopup(popup_32220fe469b1292ddc22e9efa33058bb)
         ;
 
         
     
     
-            var marker_e65beb6d790dc002d0fb9d183c224b7b = L.marker(
+            var marker_74a80b3ad499dbab7c0b894877952727 = L.marker(
                 [9.6, -86.0],
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var div_icon_7b2928507b05b9e57e296ff2de3283d7 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 24px; letter-spacing: 2px; font-weight: 900; color: rgba(255,255,255,0.98); text-shadow: 0 0 10px rgba(0,0,0,0.7);\"\u003ePACIFIC OCEAN\u003c/div\u003e"});
-            marker_e65beb6d790dc002d0fb9d183c224b7b.setIcon(div_icon_7b2928507b05b9e57e296ff2de3283d7);
+            var div_icon_b63f45d8016928b5076374ba2c4d5f28 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 24px; letter-spacing: 2px; font-weight: 900; color: rgba(255,255,255,0.98); text-shadow: 0 0 10px rgba(0,0,0,0.7);\"\u003ePACIFIC OCEAN\u003c/div\u003e"});
+            marker_74a80b3ad499dbab7c0b894877952727.setIcon(div_icon_b63f45d8016928b5076374ba2c4d5f28);
         
     
-            var marker_bdb93956708e5b03d041211eadbe4404 = L.marker(
+            var marker_4ef018f33efdb7c2dc5722208f7de6cc = L.marker(
                 [10.2, -82.2],
                 {}
-            ).addTo(map_1bc72a950b95189c50642eca2f8566b8);
+            ).addTo(map_0692f0705bfd581d6beacde90985cc84);
         
     
-            var div_icon_59162afdbe101e8a1f8093b10841b91f = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 24px; letter-spacing: 2px; font-weight: 900; color: rgba(255,255,255,0.98); text-shadow: 0 0 10px rgba(0,0,0,0.7);\"\u003eCARIBBEAN SEA\u003c/div\u003e"});
-            marker_bdb93956708e5b03d041211eadbe4404.setIcon(div_icon_59162afdbe101e8a1f8093b10841b91f);
+            var div_icon_6fd22b7dccc3fe210794439266c0a110 = L.divIcon({"className": "empty", "html": "\u003cdiv style=\"font-size: 24px; letter-spacing: 2px; font-weight: 900; color: rgba(255,255,255,0.98); text-shadow: 0 0 10px rgba(0,0,0,0.7);\"\u003eCARIBBEAN SEA\u003c/div\u003e"});
+            marker_4ef018f33efdb7c2dc5722208f7de6cc.setIcon(div_icon_6fd22b7dccc3fe210794439266c0a110);
         
 </script>
 </html>
