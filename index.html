@@ -621,6 +621,18 @@
         });
       }
 
+
+      // Outside click (capture) closes only if tapping outside the panel (mobile only)
+      document.addEventListener('click', function(ev){
+        try {
+          if (!isMobile()) return;
+          var isOpen = btn.getAttribute('aria-expanded') === 'true';
+          if (!isOpen) return;
+          var within = panel.contains(ev.target) || btn.contains(ev.target);
+          if (!within) { setExpanded(false); }
+        } catch(e){}
+      }, true);
+
       // Keep labels consistent when resizing across breakpoints
       window.addEventListener('resize', function(){
         var isOpen = btn.getAttribute('aria-expanded') === 'true';
@@ -1055,6 +1067,22 @@
   function updateVisibility(){
     try {
       if (!isMobile()) { btn.classList.remove('show'); return; }
+      if (!window.mapRef || !mapRef.getCenter || !mapRef.getZoom) { btn.classList.remove('show'); return; }
+      var z = mapRef.getZoom();
+      var c = mapRef.getCenter ? mapRef.getCenter() : null;
+      var atDefault = false;
+      if (typeof window.initialZoom !== 'undefined' && window.initialCenter) {
+        var tolZ = 0.05;
+        var tolLat = 0.004; // ~450m
+        var tolLng = 0.004; // ~450m near equator
+        atDefault = (Math.abs(z - window.initialZoom) <= tolZ) &&
+                    c && (Math.abs(c.lat - window.initialCenter.lat) <= tolLat) &&
+                    (Math.abs(c.lng - window.initialCenter.lng) <= tolLng);
+      }
+      // Show whenever NOT at default frame
+      if (!atDefault) btn.classList.add('show'); else btn.classList.remove('show');
+    } catch(e){ /* no-op */ }
+  }
       var hasSelection = (window.selectedCityMobile) || (window.selectedCity);
       var hasRoute = (typeof window.activeRouteLayer !== 'undefined' && window.activeRouteLayer);
       var zoomed = false;
