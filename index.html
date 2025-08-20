@@ -223,6 +223,36 @@
   #helpScrim.visible { display: block; }
 }
 </style>
+
+<style>
+/* Mobile floating Reset View button */
+#mobileResetBtn {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  z-index: 810;
+  width: 46px;
+  height: 46px;
+  border-radius: 9999px;
+  background: rgba(20,20,20,0.92);
+  color: #fff;
+  border: 1px solid #333;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+#mobileResetBtn:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
+#mobileResetBtn svg { width: 38px; height: 38px; display: block; }
+#mobileResetBtn.show { display: flex; }
+
+/* Only render the control on mobile-sized or coarse-pointer devices */
+@media (min-width: 901px) and (pointer: fine) {
+  #mobileResetBtn { display: none !important; }
+}
+</style>
+
 </head>
 <body>
     
@@ -445,9 +475,27 @@
       return L.latLngBounds(mapRef.unproject(nw2, z), mapRef.unproject(se2, z));
     }
     function applyMaxBounds() {
-      if (isMobile()) mapRef.setMaxBounds(padBoundsByPixels(L.latLngBounds([7.0,-87.0], [12.1,-82.0]), PADDING_PX));
-      else mapRef.setMaxBounds(L.latLngBounds([7.0,-87.0], [12.1,-82.0]));
-    }
+      // New: remove hard max bounds to avoid snap-back. Rely on Reset View for recentering.
+      try {
+        var isMobile = (function(){ try { return window.matchMedia &&  (matchMedia('(pointer: coarse)').matches || window.innerWidth <= 900); } catch(e){ return (window.innerWidth||1000) <= 900; } })();
+        var fudge = isMobile ? 1.25 : 0.90; // allow a small zoom-out from the initial frame
+        if (typeof initialZoom !== 'undefined' && mapRef && mapRef.setMinZoom) {
+          var mz = Math.max(0, initialZoom - fudge);
+          mapRef.setMinZoom(mz);
+          if (mapRef.options) mapRef.options.minZoom = mz;
+        } else if (mapRef && mapRef.options) {
+          var mz2 = Math.max(0, (typeof initialZoom !== 'undefined' ? initialZoom : mapRef.getZoom()) - fudge);
+          mapRef.options.minZoom = mz2;
+          if (mapRef.setMinZoom) try { mapRef.setMinZoom(mz2); } catch(e){}
+        }
+        // Clear any existing bounds & snap
+        if (mapRef && mapRef.setMaxBounds) mapRef.setMaxBounds(null);
+        if (mapRef && mapRef.options) {
+          mapRef.options.maxBounds = null;
+          mapRef.options.maxBoundsViscosity = 0;
+        }
+      } catch(e) { /* no-op */ }
+}
     applyMaxBounds();
 
     // ROUTING
@@ -973,6 +1021,101 @@
   // Initialize
   bindMapEvents();
   bindFab();
+})();
+</script>
+
+
+<button id="mobileResetBtn" type="button" aria-label="Reset to full map view" title="Reset view">
+  <!-- Diagonal expand icon in white -->
+  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <polyline points="14 3 21 3 21 10"></polyline>
+    <line x1="21" y1="3" x2="14" y2="10"></line>
+    <polyline points="10 21 3 21 3 14"></polyline>
+    <line x1="3" y1="21" x2="10" y2="14"></line>
+  </svg>
+</button>
+
+
+<script>
+(function mobileResetButton(){
+  var btn = document.getElementById('mobileResetBtn');
+  if (!btn) return;
+
+  function isMobile(){
+    try { return (window.matchMedia && (matchMedia('(pointer: coarse)').matches || window.innerWidth <= 900)); }
+    catch(e){ return (window.innerWidth||1000) <= 900; }
+  }
+
+  function anyPopupOpen(){
+    try { return !!document.querySelector('.leaflet-popup-pane .leaflet-popup'); } catch(e){ return false; }
+  }
+
+  function approx(a,b,t){ return Math.abs(a-b) <= t; }
+
+  function updateVisibility(){
+    try {
+      if (!isMobile()) { btn.classList.remove('show'); return; }
+      var hasSelection = (window.selectedCityMobile) || (window.selectedCity);
+      var hasRoute = (typeof window.activeRouteLayer !== 'undefined' && window.activeRouteLayer);
+      var zoomed = false;
+      if (window.mapRef && mapRef.getZoom && typeof window.initialZoom !== 'undefined') {
+        zoomed = mapRef.getZoom() > (initialZoom + 0.05);
+      }
+      if (hasSelection || hasRoute || anyPopupOpen() || zoomed) btn.classList.add('show');
+      else btn.classList.remove('show');
+    } catch(e){/* no-op */}
+  }
+
+  // Click behavior: mirror desktop Reset View
+  btn.addEventListener('click', function(){
+    try {
+      // Close all popups
+      if (window.mapRef) { mapRef.closePopup(); }
+      // Clear any active route
+      if (typeof window.activeRouteLayer !== 'undefined' && window.activeRouteLayer && window.mapRef) {
+        try { mapRef.removeLayer(activeRouteLayer); } catch(e){}
+        window.activeRouteLayer = null;
+      }
+      // Clear selected city vars used by mobile/desktop flows
+      if (typeof window.selectedCity !== 'undefined') window.selectedCity = null;
+      if (typeof window.selectedCityMobile !== 'undefined') window.selectedCityMobile = null;
+      // Close the mobile Cities sheet if open
+      var sheet = document.getElementById('citySheet');
+      if (sheet && sheet.classList && sheet.classList.contains('open')) {
+        var closeBtn = document.getElementById('closeSheetBtn');
+        if (closeBtn) try { closeBtn.click(); } catch(e){ sheet.classList.remove('open'); }
+        else { sheet.classList.remove('open'); }
+      }
+      // Smoothly return to initial frame
+      if (typeof window.resetToInitial === 'function') window.resetToInitial(true);
+      // Hide after resetting
+      btn.classList.remove('show');
+    } catch(e){ /* no-op */ }
+  });
+
+  // Keep visibility in sync with interactions
+  try {
+    if (window.mapRef && mapRef.on) {
+      mapRef.on('moveend zoomend popupopen popupclose', updateVisibility);
+    }
+  } catch(e){}
+  var sheet = document.getElementById('citySheet');
+  if (sheet) sheet.addEventListener('click', function(ev){
+    var b = ev.target && ev.target.closest ? ev.target.closest('button.btn') : null;
+    if (!b) return;
+    setTimeout(updateVisibility, 800); // after flyTo
+  });
+  // Also watch quick-jump in case of small tablets treated as mobile
+  var menu = document.getElementById('cityMenu');
+  if (menu) menu.addEventListener('click', function(ev){
+    if (!isMobile()) return;
+    var b = ev.target && ev.target.closest ? ev.target.closest('button.btn') : null;
+    if (!b) return;
+    setTimeout(updateVisibility, 800);
+  });
+
+  // Initial state after load
+  setTimeout(updateVisibility, 600);
 })();
 </script>
 
