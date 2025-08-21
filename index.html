@@ -71,7 +71,9 @@
     max-width: none;
     padding: 0;
     pointer-events: none; /* avoid covering UI beneath */
-  }
+  
+  z-index: 900;
+}
   #helpPanel.collapsed .hp-header { padding: 0; }
   #helpPanel.collapsed #helpToggle {
     pointer-events: auto; /* clickable */
@@ -197,15 +199,7 @@
 <style>
 /* Mobile intro scrim to require dismissing instructions before map interaction */
 @media (max-width: 900px), (pointer: coarse) {
-  #introScrim {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.35);
-    display: none; /* shown by JS on first load */
-    pointer-events: auto;
-    /* Place under the help panel but above the map and other UI */
-    z-index: 815;
-  }
+  
   /* Ensure help panel sits above scrim when visible */
   #helpPanel {  
   z-index: 2000;
@@ -278,23 +272,27 @@
   .cr-airport { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.5; color: #111; }
   .cr-airport ul { margin: 6px 0 0 18px; padding: 0; }
 
-  #cityMenu { position: absolute; top: 12px; right: 12px; z-index: 1000; background: rgba(17,17,17,0.9); color: #fff; padding: 10px; border-radius: 12px; backdrop-filter: blur(2px); font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+  #cityMenu { position: absolute; top: 12px; right: 12px; z-index: 1400; background: rgba(17,17,17,0.9); color: #fff; padding: 10px; border-radius: 12px; backdrop-filter: blur(2px); font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
   #cityMenu h3 { margin: 0 0 8px; font-size: 14px; font-weight: 700; letter-spacing: .3px; }
   #cityMenu .btn { display: block; width: 100%; text-align: left; background: #222; color: #fff; border: 2px solid #444; border-radius: 10px; padding: 10px 12px; margin: 6px 0; font-size: 14px; cursor: pointer; min-height: 44px; font-family: inherit; }
   #cityMenu .btn:hover { background: #2c2c2c; }
   #cityMenu .btn:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
   #cityMenu .btn.selected { background: #314252; border-color: #4e6d8a; }
-  @media (max-width: 900px), (pointer: coarse) { #cityMenu { display: none; } }
+  @media (max-width: 900px), (pointer: coarse) { #cityMenu { display: none; 
+  z-index: 1400;
+} }
 
   #cityFab { position: absolute; right: 14px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 1000; background: #111; color: #fff; border: 0; border-radius: 9999px; width: 56px; height: 56px; box-shadow: 0 10px 20px rgba(0,0,0,.35); font-weight: 700; display: none; }
   #cityFab:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
   @media (min-width: 901px) and (pointer: fine) { #cityFab { display: none; } }
 
-  #citySheet { position: absolute; left: 0; right: 0; bottom: 0; transform: translateY(100%); transition: transform .28s ease; z-index: 1000; background: rgba(20,20,20,.97); color: #fff; border-top-left-radius: 16px; border-top-right-radius: 16px; padding: 8px 14px calc(14px + env(safe-area-inset-bottom)); box-shadow: 0 -12px 28px rgba(0,0,0,.4); display: block; }
+  #citySheet { position: absolute; left: 0; right: 0; bottom: 0; transform: translateY(100%); transition: transform .28s ease; z-index: 1400; background: rgba(20,20,20,.97); color: #fff; border-top-left-radius: 16px; border-top-right-radius: 16px; padding: 8px 14px calc(14px + env(safe-area-inset-bottom)); box-shadow: 0 -12px 28px rgba(0,0,0,.4); display: block; }
   #citySheet.open { transform: translateY(0%); }
   #citySheet h3 { margin: 6px 0 8px; font-size: 16px; font-weight: 800; }
   #citySheet .btn { display: block; width: 100%; text-align: left; background: #222; color: #fff; border: 2px solid #444; border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: 16px; min-height: 48px; }
-  @media (min-width: 901px) and (pointer: fine) { #citySheet { display: none; } }
+  @media (min-width: 901px) and (pointer: fine) { #citySheet { display: none; 
+  z-index: 1400;
+} }
 
   /* Sheet header + grabber (mobile) */
   #sheetHeader { position: relative; display:flex; align-items:center; justify-content:center; padding-top: 8px; }
@@ -390,7 +388,9 @@
 
 
 /* Safety: prevent closed sheet from blocking map gestures */
-#citySheet { pointer-events: none; }
+#citySheet { pointer-events: none; 
+  z-index: 1400;
+}
 #citySheet.open { pointer-events: auto; }
 
 </style>
@@ -438,27 +438,63 @@
 
     function fitAll() {
       if (isMobile()) {
-        var baseZoom = mapRef.getBoundsZoom(cityBounds, true);
-        var center = cityBounds.getCenter();
-        mapRef.setView(center, baseZoom, {animate:false});
-        var candidate = baseZoom + 1;
-        mapRef.setView(center, candidate, {animate:false});
-        if (!mapRef.getBounds().contains(cityBounds)) mapRef.setView(center, baseZoom, {animate:false});
-        mapRef.panInsideBounds(cityBounds.pad(0.02), {animate:false});
+        mapRef.fitBounds(cityBounds.pad(0.02), { animate: false });
       } else {
         mapRef.fitBounds(cityBounds, { paddingTopLeft: [30, 40], paddingBottomRight: [200, 30], animate: false });
       }
     }
-    fitAll();
-
-    var initialCenter = mapRef.getCenter();
-    var initialZoom = mapRef.getZoom();
+    // Initialize view after Leaflet is ready, so viewport sizing is final on mobile
+    
+        // Initialize view after Leaflet is ready (mobile viewport needs to settle)
+    mapRef.whenReady(function () {
+      if (isMobile()) {
+        var apply = function() {
+          try {
+            // Compute canonical mobile reset frame once
+            mapRef.fitBounds(cityBounds.pad(0.02), { animate: false });
+            resetCenterMobile = mapRef.getCenter();
+            resetZoomMobile = mapRef.getZoom();
+            // Apply the exact same frame for first load (no side effects)
+            mapRef.setView(resetCenterMobile, resetZoomMobile, { animate: false });
+          } catch (e) {}
+          // Record initial center/zoom (used by desktop reset)
+          try { initialCenter = mapRef.getCenter(); initialZoom = mapRef.getZoom(); } catch (e) {}
+        };
+        requestAnimationFrame(function(){ requestAnimationFrame(apply); });
+      } else {
+        try {
+          fitAll();
+          initialCenter = mapRef.getCenter();
+          initialZoom = mapRef.getZoom();
+        } catch (e) {}
+      }
+    });var initialCenter, initialZoom;
+    var resetCenterMobile = null, resetZoomMobile = null;
 
     function resetToInitial(smooth) {
       if (mapRef.flyTo && smooth) mapRef.flyTo(initialCenter, initialZoom, {duration:.8});
       else mapRef.setView(initialCenter, initialZoom, {animate: !!smooth});
-    
     }
+
+    // Mobile-specific: fit all five cities smoothly
+    
+    function resetToAllCitiesMobile() {
+      try {
+        if (isMobile()) {
+          if (resetCenterMobile && (typeof resetZoomMobile === 'number')) {
+            mapRef.setView(resetCenterMobile, resetZoomMobile, { animate: true });
+            return;
+          }
+          if (mapRef && typeof mapRef.fitBounds === 'function' && typeof cityBounds !== 'undefined') {
+            mapRef.fitBounds(cityBounds.pad(0.02), { animate: true });
+            return;
+          }
+        }
+      } catch (e) {}
+      // Fallback to initial frame (desktop semantics)
+      try { resetToInitial(true); } catch (e) {}
+    }
+
     // Close any open popups (cities, airports, or other layers)
     function crCloseAllPopups() {
       try {
@@ -478,11 +514,7 @@
         }
       } catch (e) {}
     }
-// (removed stray leftover from earlier patch)
-// (removed stray leftover from earlier patch)
-// (removed stray leftover from earlier patch)
-
-    function padBoundsByPixels(bounds, px) {
+function padBoundsByPixels(bounds, px) {
       var z = mapRef.getZoom();
       var nw = mapRef.project(bounds.getNorthWest(), z);
       var se = mapRef.project(bounds.getSouthEast(), z);
@@ -685,7 +717,7 @@
         var closeBtn = document.getElementById('closeSheetBtn');
         if (closeBtn && isMobile()) try { closeBtn.click(); } catch(e) { }
         // Gentle pan back to initial
-        try { resetToInitial(true); } catch(e) { }
+        try { resetToAllCitiesMobile(); } catch(e) { }
         btn.classList.remove('show');
       });
 
@@ -698,7 +730,7 @@
     (function(){
       var panel = document.getElementById('helpPanel');
       var btn = document.getElementById('helpToggle');
-      var scrim = document.getElementById('introScrim');
+      var scrim = document.getElementById('');
       if (!panel || !btn || !scrim) return;
 
       function isMobile(){ try { return window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 900; } catch(e){ return false; } }
@@ -933,9 +965,6 @@
 
 
 <button id="mobileResetBtn" type="button" aria-label="Reset to full map view" title="Reset view"></button>
-
-<div id="introScrim" aria-hidden="true"></div>
-
 <script>
 // Mobile-only active city sync without changing desktop logic
 (function(){
