@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+<script id="CR_CONFIG" type="application/json">{
+  "chipSizePx": 44, "stackGapPx": 8, "chipBg": "rgb(33 33 33)", "chipBorder": "#333",
+  "panelBg": "rgb(33 33 33 / 92%)", "helpPanelWidth": "min(92vw, 340px)",
+  "citySheetWidth": "min(49.067vw, 181px)", "animMs": 180, "routing": { "useOsrm": true, "autoFitOnMobile": false }
+}</script>
+
   <link rel="preconnect" href="https://server.arcgisonline.com">
     
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
@@ -675,29 +681,107 @@ html, body { height: 100%; margin: 0; background: #000; }
 /* Keep overlay buttons aligned to safe areas (already using env(...) elsewhere) */
 </style>
 
+<script>(function(){try{var el=document.getElementById('CR_CONFIG');if(!el)return;var cfg=JSON.parse(el.textContent||'{}')||{};var r=document.documentElement;function S(n,v){if(v!=null)r.style.setProperty(n,String(v));}
+S('--chip-size',((cfg.chipSizePx??44))+'px');S('--stack-gap',((cfg.stackGapPx??8))+'px');S('--chip-bg',(cfg.chipBg??'rgb(33 33 33)'));
+S('--chip-border',(cfg.chipBorder??'#333'));S('--panel-bg',(cfg.panelBg??'rgb(33 33 33 / 92%)'));
+S('--panel-width-help',(cfg.helpPanelWidth??'min(92vw, 340px)'));S('--panel-width-city',(cfg.citySheetWidth??'min(49.067vw, 181px)'));
+S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn('CR_CONFIG parse failed:',e);}})();</script>
+<style>:root{--chip-size:44px;--stack-gap:8px;--chip-bg:rgb(33 33 33);--chip-border:#333;--panel-bg:rgb(33 33 33 / 92%);--panel-width-help:min(92vw,340px);--panel-width-city:min(49.067vw,181px);--anim-ms:180ms;}
+@media (max-width:900px),(pointer:coarse){
+#helpPanel.collapsed #helpToggle,#helpToggle,#mobileResetBtn,#cityFab,#citiesFab,#mobileCityFab{width:var(--chip-size)!important;height:var(--chip-size)!important;min-width:var(--chip-size)!important;min-height:var(--chip-size)!important;border-radius:9999px!important;background:var(--chip-bg)!important;border:1px solid var(--chip-border)!important;box-shadow:0 6px 20px rgba(0,0,0,.35)!important}
+#mobileResetBtn{left:calc(env(safe-area-inset-left,0px) + 12px)!important;bottom:calc(env(safe-area-inset-bottom,0px) + 12px + var(--chip-size) + var(--stack-gap))!important}
+#cityFab,#citiesFab,#mobileCityFab{left:calc(env(safe-area-inset-left,0px) + 12px)!important;bottom:calc(env(safe-area-inset-bottom,0px) + 12px + var(--chip-size) + var(--stack-gap) + var(--chip-size) + var(--stack-gap))!important}
+#helpPanel{width:var(--panel-width-help)!important;max-width:var(--panel-width-help)!important}#helpPanel,#citySheet{background:var(--panel-bg)!important}
+#citySheet,#citySheet.open{width:var(--panel-width-city)!important;max-width:var(--panel-width-city)!important;left:12px!important;right:auto!important;box-sizing:border-box!important}
+#citySheet,#helpBody{transition:opacity var(--anim-ms) ease,transform var(--anim-ms) ease,visibility 0s linear var(--anim-ms)!important}
+}
+#map{position:fixed;inset:0;height:100vh}@supports (height:100svh){#map{height:100svh}}@supports (height:100dvh){#map{height:100dvh}}@supports (height:100lvh){#map{height:100lvh}}html,body{height:100%;margin:0;background:#000}.leaflet-control-attribution{margin-bottom:calc(env(safe-area-inset-bottom,0px) + 6px)}
+</style>
 <style>
-/* Full-bleed map under transparent browser chrome */
-#map, #map_c8689fa0fa819fbcc2c9e3f97e0c1fbb {
-  position: fixed;
-  inset: 0;
-  height: 100vh; /* baseline */
+/* === Unified CHIP system (uses CR_CONFIG variables) === */
+@media (max-width: 900px), (pointer: coarse) {
+  .chip {
+    width: var(--chip-size) !important;
+    height: var(--chip-size) !important;
+    min-width: var(--chip-size) !important;
+    min-height: var(--chip-size) !important;
+    border-radius: 9999px !important;
+    background: var(--chip-bg) !important;
+    border: 1px solid var(--chip-border) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,.35) !important;
+    display: grid !important;
+    place-items: center !important;
+    color: #fff !important;
+  }
 }
-@supports (height: 100svh) {
-  #map, #map_c8689fa0fa819fbcc2c9e3f97e0c1fbb { height: 100svh; }
-}
-@supports (height: 100dvh) {
-  #map, #map_c8689fa0fa819fbcc2c9e3f97e0c1fbb { height: 100dvh; }
-}
-@supports (height: 100lvh) {
-  #map, #map_c8689fa0fa819fbcc2c9e3f97e0c1fbb { height: 100lvh; } /* preferred */
-}
+</style>
 
-/* Dark page backdrop to avoid white flashes under toolbars/overscroll */
-html, body { height: 100%; margin: 0; background: #000; }
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  /* 1) Center the buildings icon inside the Cities chip */
+  #cityFab::before, #citiesFab::before, #mobileCityFab::before {
+    background-position: center !important;   /* reset earlier 48% tweak */
+  }
 
-/* Keep Leaflet attribution visible above bottom toolbar/home area */
-.leaflet-control-attribution {
-  margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
+  /* 2) Collapsed Help: show only the chip, not the panel background */
+  #helpPanel.collapsed {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+}
+</style>
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  /* Hide any visible label content for city chip; keep aria-label for a11y */
+  #cityFab, #citiesFab, #mobileCityFab { font-size: 0 !important; }
+
+  /* Center the new buildings icon; fixed box ensures no vertical drift */
+  #cityFab::before, #citiesFab::before, #mobileCityFab::before {
+    content: "";
+    width: 22px; height: 22px;
+    display: block;
+    align-self: center; justify-self: center;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 22px 22px;
+    /* New balanced SVG with exact viewBox and no extra whitespace */
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="%23fff"><rect x="2.5" y="10.5" width="6" height="11" rx="1.3"/><rect x="9.5" y="6.5" width="6" height="15" rx="1.3"/><rect x="17.5" y="12.5" width="4" height="9" rx="1.2"/></g></svg>');
+  }
+}
+</style>
+<style>
+/* Map label halo for contrast on imagery */
+.city-label, .cityLabel, .map-label, .mapLabel,
+.ocean-label, .oceanLabel, .ocean-label--big, .ocean-label--small {
+  text-shadow:
+    0 0 2px rgba(0,0,0,.85),
+    0 0 4px rgba(0,0,0,.85),
+    0 0 6px rgba(0,0,0,.85);
+}
+.ocean-label--big, .oceanLabel--big {
+  text-shadow:
+    0 0 2px rgba(0,0,0,.95),
+    0 0 6px rgba(0,0,0,.9),
+    0 0 10px rgba(0,0,0,.85);
+}
+</style>
+<style>
+/* Screen-reader only utility */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
 </style>
 </head>
@@ -849,13 +933,13 @@ html, body { height: 100%; margin: 0; background: #000; }
   <button class="btn" aria-labelledby="cityMenuHeading" aria-controls="map_c8689fa0fa819fbcc2c9e3f97e0c1fbb" aria-pressed="false" data-city="Puerto Viejo" data-lat="9.66" data-lng="-82.76">Puerto Viejo</button>
 </div>
 
-<button id="cityFab" aria-haspopup="dialog" aria-expanded="false" aria-controls="citySheet">Cities</button>
-<div id="citySheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+<button id="cityFab" aria-haspopup="dialog" aria-expanded="false" aria-controls="citySheet" class="chip" aria-label="Cities">Cities</button>
+<div id="citySheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" tabindex="-1" aria-describedby="citySheetDesc"><p id="citySheetDesc" class="sr-only">City list panel. Select a city to open its info card. Tap outside the panel or press Escape to close.</p>
   <div id="sheetHeader">
     <div id="grabber" aria-hidden="true"></div>
     <button id="closeSheetBtn" aria-label="Close quick jump">Close</button>
   </div>
-  <h3 id="sheetTitle">Quick jump</h3>
+  <h3 id="sheetTitle" id="citySheetTitle">Quick jump</h3>
   <button class="btn" data-city="San José" data-lat="9.93" data-lng="-84.08">San José</button>
   <button class="btn" data-city="Tamarindo" data-lat="10.3" data-lng="-85.84">Tamarindo</button>
   <button class="btn" data-city="Jacó" data-lat="9.62" data-lng="-84.63">Jacó</button>
@@ -1388,10 +1472,10 @@ function padBoundsByPixels(bounds, px) {
         
 
 <div id="helpScrim" aria-hidden="true"></div>
-<div id="helpPanel" role="complementary" aria-labelledby="helpTitle" aria-live="polite">
+<div id="helpPanel" role="complementary" aria-labelledby="helpTitle" aria-live="polite" aria-modal="true" tabindex="-1" aria-describedby="helpBody">
   <div class="hp-header">
     <h3 id="helpTitle">How to use this map</h3>
-    <button id="helpToggle" type="button" aria-expanded="true" aria-controls="helpBody"></button>
+    <button id="helpToggle" type="button" aria-expanded="true" aria-controls="helpBody" class="chip"></button>
   </div>
   <div id="helpBody">
     <p><strong>Click or tap a city</strong> label to open its info card with:</p>
@@ -1410,7 +1494,7 @@ function padBoundsByPixels(bounds, px) {
 </div>
 
 
-<button id="mobileResetBtn" type="button" aria-label="Reset to full map view" title="Reset view"></button>
+<button id="mobileResetBtn" type="button" aria-label="Reset to full map view" title="Reset view" class="chip"></button>
 <script>
 // Mobile-only active city sync without changing desktop logic
 (function(){
@@ -1583,21 +1667,43 @@ function padBoundsByPixels(bounds, px) {
 <script>
 (function(){
   try {
-    var t;
-    function refreshMapSize(){
-      if (window.map_c8689fa0fa819fbcc2c9e3f97e0c1fbb && window.map_c8689fa0fa819fbcc2c9e3f97e0c1fbb.invalidateSize) {
-        window.map_c8689fa0fa819fbcc2c9e3f97e0c1fbb.invalidateSize(true);
-      } else if (window.mapRef && window.mapRef.invalidateSize) {
-        window.mapRef.invalidateSize(true);
+    var helpPanel=document.getElementById('helpPanel');
+    var helpToggle=document.getElementById('helpToggle');
+    var citySheet=document.getElementById('citySheet');
+    var cityFab=document.getElementById('cityFab')||document.getElementById('citiesFab')||document.getElementById('mobileCityFab');
+
+    function onChange(target){
+      if (target===helpPanel){
+        var open=!helpPanel.classList.contains('collapsed');
+        if (open){ (document.getElementById('helpTitle')||helpPanel).focus(); }
+        else if (helpToggle){ helpToggle.focus(); }
+      }
+      if (target===citySheet){
+        var open=citySheet.classList.contains('open');
+        if (open){ (document.getElementById('citySheetTitle')||citySheet).focus(); }
+        else if (cityFab){ cityFab.focus(); }
       }
     }
-    ['resize','orientationchange','pageshow','visibilitychange'].forEach(function(evt){
-      window.addEventListener(evt, function(){
-        clearTimeout(t);
-        t = setTimeout(refreshMapSize, 150);
-      }, {passive:true});
+
+    var obs=new MutationObserver(function(muts){
+      muts.forEach(function(m){ if (m.attributeName==='class') onChange(m.target); });
     });
-  } catch(e) {}
+    if (helpPanel) obs.observe(helpPanel,{attributes:true});
+    if (citySheet) obs.observe(citySheet,{attributes:true});
+
+    document.addEventListener('keydown',function(e){
+      if(e.key==='Escape'||e.key==='Esc'){
+        if(citySheet && citySheet.classList.contains('open')){
+          citySheet.classList.remove('open');
+          if(cityFab) cityFab.focus();
+        }else if(helpPanel && !helpPanel.classList.contains('collapsed')){
+          var x=document.getElementById('helpClose')||helpPanel.querySelector('button[aria-label="Close"], .hp-close');
+          if(x && x.click) x.click(); else helpPanel.classList.add('collapsed');
+          if(helpToggle) helpToggle.focus();
+        }
+      }
+    },{passive:true});
+  }catch(e){}
 })();
 </script>
 </body>
