@@ -1633,8 +1633,8 @@ function padBoundsByPixels(bounds, px) {
     }
 
     // capture phase to ensure we see the event even if Leaflet stops it
-    document.addEventListener('pointerdown', handleOutside, true);
-    document.addEventListener('click', handleOutside, true);
+    document.addEventListener('pointerdown', handleOutside, {capture:true, passive:true});
+    document.addEventListener('click', handleOutside, {capture:true, passive:true});
 
     // ESC key closes the sheet
     document.addEventListener('keydown', function(e){
@@ -1706,6 +1706,303 @@ function padBoundsByPixels(bounds, px) {
   }catch(e){}
 })();
 </script>
+
+<script>
+// Default passive listeners on window/document for touchstart/touchmove/wheel
+(function(){
+  try{
+    var orig = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function(type, listener, options){
+      try{
+        if ((this===window || this===document) && (type==='touchstart' || type==='touchmove' || type==='wheel')){
+          if (options === undefined) { options = { passive: true }; }
+          else if (typeof options === 'boolean') { options = { capture: options, passive: true }; }
+          else if (typeof options === 'object' && options.passive == null) { options = Object.assign({}, options, { passive: true }); }
+        }
+      }catch(e){}
+      return orig.call(this, type, listener, options);
+    };
+  }catch(e){}
+})();
+</script>
+
+
+<script>
+(function(){
+  function findMap(){
+    if (window.mapRef && typeof window.mapRef.getZoom==='function') return window.mapRef;
+    for (var k in window){
+      try{
+        var v = window[k];
+        if (v && typeof v.getZoom==='function' && typeof v.getCenter==='function' && typeof v.on==='function'){
+          // Likely a Leaflet map instance
+          return v;
+        }
+      }catch(e){}
+    }
+    return null;
+  }
+  function findBaseTileLayer(map){
+    var found = null;
+    if (!map || !map.eachLayer) return null;
+    map.eachLayer(function(lyr){
+      try{
+        if (!found && lyr && (typeof lyr.getTileUrl==='function' || lyr._url)){
+          found = lyr;
+        }
+      }catch(e){}
+    });
+    return found;
+  }
+  function ll2tile(lat, lng, z){
+    var rad = Math.PI / 180, latRad = lat*rad;
+    var n = Math.pow(2, z);
+    var xt = Math.floor((lng + 180) / 360 * n);
+    var yt = Math.floor((1 - Math.log(Math.tan(latRad) + 1/Math.cos(latRad)) / Math.PI) / 2 * n);
+    if (xt < 0) xt = 0; if (yt < 0) yt = 0;
+    var max = n - 1;
+    if (xt > max) xt = max; if (yt > max) yt = max;
+    return {x:xt, y:yt};
+  }
+  function buildUrl(tpl, x,y,z){
+    var url = tpl;
+    url = url.replace('{x}', x).replace('{y}', y).replace('{z}', z);
+    // common alt ordering
+    url = url.replace('{s}', 'a');
+    url = url.replace('{switch:a,b,c}', 'a');
+    // Esri style {z}/{y}/{x}
+    url = url.replace('{level}', z).replace('{col}', x).replace('{row}', y);
+    return url;
+  }
+  function prewarm(){
+    try{
+      var map = findMap();
+      if (!map) return;
+      var base = findBaseTileLayer(map);
+      if (!base || !(base._url || base.getTileUrl)) return;
+      var tpl = base._url || (base.getTileUrl && base.getTileUrl({x:0,y:0,z:0}) || '');
+      if (!tpl || typeof tpl !== 'string') return;
+
+      var z = Math.round(map.getZoom()) + 1;
+      var maxZ = (base.options && (base.options.maxZoom || base.options.maxNativeZoom)) || (map.getMaxZoom && map.getMaxZoom()) || 19;
+      if (z > maxZ) return;
+      var c = map.getCenter();
+      var t = ll2tile(c.lat, c.lng, z);
+
+      var radius = 1; // 3x3 around center
+      var urls = [];
+      for (var dx=-radius; dx<=radius; dx++){
+        for (var dy=-radius; dy<=radius; dy++){
+          var u = buildUrl(tpl, t.x+dx, t.y+dy, z);
+          if (u && urls.indexOf(u)===-1) urls.push(u);
+        }
+      }
+      urls.forEach(function(u){
+        try{
+          var img = new Image();
+          img.decoding = 'async';
+          img.referrerPolicy = 'no-referrer';
+          img.crossOrigin = 'anonymous';
+          img.src = u;
+        }catch(e){}
+      });
+    }catch(e){}
+  }
+  function onceIdle(cb){
+    var map = findMap();
+    if (!map) { setTimeout(function(){ onceIdle(cb); }, 400); return; }
+    if (map.whenReady) {
+      map.whenReady(function(){ setTimeout(cb, 300); });
+    } else {
+      setTimeout(cb, 1200);
+    }
+  }
+  // run once after initial idle
+  onceIdle(prewarm);
+})();
+</script>
+
+
+<script>
+// Prewarm on each zoom step (throttled) to keep next level buttery
+(function(){
+  function findMap(){
+    if (window.mapRef && typeof window.mapRef.getZoom==='function') return window.mapRef;
+    for (var k in window){
+      try{
+        var v = window[k];
+        if (v && typeof v.getZoom==='function' && typeof v.getCenter==='function' && typeof v.on==='function'){
+          return v;
+        }
+      }catch(e){}
+    }
+    return null;
+  }
+  function findBaseTileLayer(map){
+    var found = null;
+    if (!map || !map.eachLayer) return null;
+    map.eachLayer(function(lyr){
+      try{
+        if (!found && lyr && (typeof lyr.getTileUrl==='function' || lyr._url)){
+          found = lyr;
+        }
+      }catch(e){}
+    });
+    return found;
+  }
+  function ll2tile(lat, lng, z){
+    var rad = Math.PI / 180, latRad = lat*rad;
+    var n = Math.pow(2, z);
+    var xt = Math.floor((lng + 180) / 360 * n);
+    var yt = Math.floor((1 - Math.log(Math.tan(latRad) + 1/Math.cos(latRad)) / Math.PI) / 2 * n);
+    xt = Math.max(0, Math.min(xt, n-1));
+    yt = Math.max(0, Math.min(yt, n-1));
+    return {x:xt, y:yt};
+  }
+  function buildUrl(tpl, x,y,z){
+    var url = tpl;
+    url = url.replace('{x}', x).replace('{y}', y).replace('{z}', z);
+    url = url.replace('{s}', 'a');
+    url = url.replace('{switch:a,b,c}', 'a');
+    url = url.replace('{level}', z).replace('{col}', x).replace('{row}', y);
+    return url;
+  }
+  function prewarmNext(map){
+    try{
+      var base = findBaseTileLayer(map);
+      if (!base || !(base._url || base.getTileUrl)) return;
+      var tpl = base._url || (base.getTileUrl && base.getTileUrl({x:0,y:0,z:0}) || '');
+      if (!tpl || typeof tpl !== 'string') return;
+
+      var zNow = Math.round(map.getZoom());
+      var z = zNow + 1;
+      var maxZ = (base.options && (base.options.maxZoom || base.options.maxNativeZoom)) || (map.getMaxZoom && map.getMaxZoom()) || 19;
+      if (z > maxZ) return;
+      var c = map.getCenter();
+      var t = ll2tile(c.lat, c.lng, z);
+
+      var radius = 1; // 3x3
+      var done = Object.create(null);
+      for (var dx=-radius; dx<=radius; dx++){
+        for (var dy=-radius; dy<=radius; dy++){
+          var u = buildUrl(tpl, t.x+dx, t.y+dy, z);
+          if (u && !done[u]){
+            done[u] = 1;
+            var img = new Image();
+            img.decoding = 'async';
+            img.referrerPolicy = 'no-referrer';
+            img.crossOrigin = 'anonymous';
+            img.src = u;
+          }
+        }
+      }
+    }catch(e){}
+  }
+
+  function attach(){
+    var map = findMap();
+    if (!map) { setTimeout(attach, 500); return; }
+    var lastZ = -999;
+    var t;
+    function onZoom(){
+      clearTimeout(t);
+      t = setTimeout(function(){
+        try{
+          var zNow = Math.round(map.getZoom());
+          if (zNow !== lastZ){
+            lastZ = zNow;
+            prewarmNext(map);
+          }
+        }catch(e){}
+      }, 180);
+    }
+    // Run once on ready (in case user starts mid-zoom)
+    if (map.whenReady) map.whenReady(function(){ prewarmNext(map); });
+    map.on && map.on('zoomend', onZoom);
+  }
+  attach();
+})();
+</script>
+
+
+<script>
+// Mobile haptics: light buzz on Reset and City select (respects reduced motion)
+(function(){
+  function haptic(ms){
+    try{
+      if (!('vibrate' in navigator)) return;
+      var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (mq && mq.matches) return;
+      navigator.vibrate(Math.max(0, ms|0) || 10);
+    }catch(e){}
+  }
+  // Reset button
+  (function(){
+    var reset = document.getElementById('mobileResetBtn') || document.getElementById('resetBtn') || document.getElementById('resetButton');
+    if (reset) reset.addEventListener('click', function(){ haptic(10); }, {passive:true});
+  })();
+  // City selection inside the Cities sheet (elements with data-city)
+  document.addEventListener('click', function(ev){
+    try{
+      var el = ev.target && ev.target.closest && ev.target.closest('#citySheet [data-city]');
+      if (el) haptic(10);
+    }catch(e){}
+  }, {passive:true, capture:false});
+})();
+</script>
+
+
+<script>
+// Extra haptics: on panel open/close and "Directions" taps (mobile-friendly)
+(function(){
+  function haptic(ms){
+    try{
+      if (!('vibrate' in navigator)) return;
+      var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (mq && mq.matches) return;
+      navigator.vibrate(Math.max(0, ms|0) || 10);
+    }catch(e){}
+  }
+
+  // 1) Panels: Help and Cities (open/close)
+  (function(){
+    var helpPanel = document.getElementById('helpPanel');
+    var citySheet = document.getElementById('citySheet');
+    function isHelpOpen(){ return helpPanel && !helpPanel.classList.contains('collapsed'); }
+    function isCityOpen(){ return citySheet && citySheet.classList.contains('open'); }
+    var prevHelp = isHelpOpen();
+    var prevCity = isCityOpen();
+
+    var obs = new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        if (m.attributeName !== 'class') return;
+        var t = m.target;
+        if (t === helpPanel){
+          var now = isHelpOpen();
+          if (now !== prevHelp){ haptic(10); prevHelp = now; }
+        } else if (t === citySheet){
+          var nowC = isCityOpen();
+          if (nowC !== prevCity){ haptic(10); prevCity = nowC; }
+        }
+      });
+    });
+    if (helpPanel) obs.observe(helpPanel, {attributes:true});
+    if (citySheet) obs.observe(citySheet, {attributes:true});
+  })();
+
+  // 2) "Directions" taps in popups (buttons/links with visible text or aria-label containing "Directions")
+  document.addEventListener('click', function(ev){
+    try{
+      var el = ev.target && ev.target.closest && ev.target.closest('a,button');
+      if (!el) return;
+      var label = ((el.getAttribute('aria-label')||'') + ' ' + (el.textContent||'')).trim().toLowerCase();
+      if (!label) return;
+      if (label.includes('directions')) { haptic(10); }
+    }catch(e){}
+  }, {passive:true});
+})();
+</script>
+
 </body>
 <script>
     
