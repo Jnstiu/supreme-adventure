@@ -39,8 +39,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
     
-            <meta name="viewport" content="width=device-width,
-                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
             <style>
                 #map_c8689fa0fa819fbcc2c9e3f97e0c1fbb {
                     position: relative;
@@ -660,6 +659,20 @@
     box-sizing: border-box !important;
   }
 }
+</style>
+
+
+<style>
+/* Full-bleed map on mobile (no white bars at top/bottom) */
+html, body { height: 100%; margin: 0; background: #000; }
+#map { position: fixed; top: 0; left: 0; right: 0; bottom: 0; }
+@supports (height: 100dvh) {
+  #map { height: 100dvh; }
+}
+@supports (height: 100svh) and not (height: 100dvh) {
+  #map { height: 100svh; }
+}
+/* Keep overlay buttons aligned to safe areas (already using env(...) elsewhere) */
 </style>
 
 </head>
@@ -1522,6 +1535,23 @@ function padBoundsByPixels(bounds, px) {
       }
     });
   } catch (e) {}
+})();
+</script>
+
+
+<script>
+(function(){
+  try {
+    var _rs;
+    ['resize','orientationchange','pageshow'].forEach(function(evt){
+      window.addEventListener(evt, function(){
+        clearTimeout(_rs);
+        _rs = setTimeout(function(){
+          if (window.mapRef && mapRef.invalidateSize) { mapRef.invalidateSize(true); }
+        }, 150);
+      });
+    });
+  } catch(e) {}
 })();
 </script>
 
