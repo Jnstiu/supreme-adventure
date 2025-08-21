@@ -696,14 +696,6 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
 #citySheet,#helpBody{transition:opacity var(--anim-ms) ease,transform var(--anim-ms) ease,visibility 0s linear var(--anim-ms)!important}
 }
 #map{position:fixed;inset:0;height:100vh}@supports (height:100svh){#map{height:100svh}}@supports (height:100dvh){#map{height:100dvh}}@supports (height:100lvh){#map{height:100lvh}}html,body{height:100%;margin:0;background:#000}.leaflet-control-attribution{margin-bottom:calc(env(safe-area-inset-bottom,0px) + 6px)}
-
-@media (max-width: 399px) {
-  .leaflet-control-attribution { 
-    font-size: 10px !important; 
-    line-height: 1.1 !important;
-  }
-}
-
 </style>
 <style>
 /* === Unified CHIP system (uses CR_CONFIG variables) === */
@@ -1018,22 +1010,20 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
       try {
         if (isMobile()) {
           if (resetCenterMobile && (typeof resetZoomMobile === 'number')) {
-            if (mapRef.flyTo) mapRef.flyTo(resetCenterMobile, resetZoomMobile, { duration: 0.85 });
-            else mapRef.setView(resetCenterMobile, resetZoomMobile, { animate: true });
+            mapRef.setView(resetCenterMobile, resetZoomMobile, { animate: true });
             return;
           }
-          if (mapRef && typeof cityBounds !== 'undefined') {
-            var b = cityBounds.pad(0.02);
-            if (mapRef.flyToBounds) mapRef.flyToBounds(b, { animate: true, duration: 0.85 /* seconds */ });
-            else if (mapRef.fitBounds) mapRef.fitBounds(b, { animate: true });
+          if (mapRef && typeof mapRef.fitBounds === 'function' && typeof cityBounds !== 'undefined') {
+            mapRef.fitBounds(cityBounds.pad(0.02), { animate: true });
             return;
           }
         }
       } catch (e) {}
-      // Fallback to desktop initial frame (smooth)
+      // Fallback to initial frame (desktop semantics)
       try { resetToInitial(true); } catch (e) {}
     }
 
+    // Close any open popups (cities, airports, or other layers)
     function crCloseAllPopups() {
       try {
         if (mapRef && typeof mapRef.closePopup === 'function') {
@@ -1080,7 +1070,7 @@ function padBoundsByPixels(bounds, px) {
         mapRef.fitBounds(activeRouteLayer.getBounds(), { padding: [30,30] });
       } catch(e) {
         const g = (o,d) => `https://www.google.com/maps/dir/?api=1&origin=${o.lat},${o.lng}&destination=${d.lat},${d.lng}&travelmode=driving`;
-        window.open(g(origin, dest), '_blank', 'noopener');
+        window.openDirectionsBest(origin, dest);
       }
     }
     const airports = {"SJO": {"lat": 9.9939, "lng": -84.2088}, "LIR": {"lat": 10.5933, "lng": -85.5444}, "XQP": {"lat": 9.4432, "lng": -84.1298}, "TNO": {"lat": 10.3139, "lng": -85.8163}};
@@ -1115,7 +1105,7 @@ function padBoundsByPixels(bounds, px) {
           setSelected(btn, false); selectedCity = null;
           Object.values({"San José": marker_32f83795174731e53923e2d93bfcdab4, "Tamarindo": marker_0f2068c66c3e5ffe5c6bb909e537574c, "Jacó": marker_ffbb1e099febdb6fea9ac2ab69a36ce3, "Manuel Antonio": marker_6b06df13e29ebaf0c0a815a3171e0dc8, "Puerto Viejo": marker_bd8bcf8966901722f25a3c28351c816a}).forEach(mk=> mk.closePopup && mk.closePopup());
           if (activeRouteLayer) { mapRef.removeLayer(activeRouteLayer); activeRouteLayer=null; }
-          setTimeout(resetToAllCitiesMobile, 120);
+          setTimeout(()=> resetToInitial(true), 120);
         } else {
           document.querySelectorAll('#cityMenu .btn').forEach(b=> setSelected(b, false));
           setSelected(btn, true); selectedCity = city;
@@ -1251,7 +1241,6 @@ function padBoundsByPixels(bounds, px) {
           mapRef.removeLayer(activeRouteLayer); activeRouteLayer = null; 
         }
         if (typeof selectedCity !== 'undefined') selectedCity = null;
-        try { window.selectedCityMobile = null; } catch(e) {}
         // Close mobile sheet if open by clicking its Close control if present
         var closeBtn = document.getElementById('closeSheetBtn');
         if (closeBtn && isMobile()) try { closeBtn.click(); } catch(e) { }
@@ -1404,22 +1393,22 @@ function padBoundsByPixels(bounds, px) {
     }
 
     // Mobile quick jump
-    window.selectedCityMobile = window.selectedCityMobile || null;
+    let selectedCityMobile = null;
     document.querySelectorAll('#citySheet .btn').forEach(btn=> {
       btn.addEventListener('click', ()=> {
         const city = btn.dataset.city;
         const lat = parseFloat(btn.dataset.lat);
         const lng = parseFloat(btn.dataset.lng);
-        if (window.selectedCityMobile === city) {
-          window.selectedCityMobile = null;
+        if (selectedCityMobile === city) {
+          selectedCityMobile = null;
           Object.values({"San José": marker_32f83795174731e53923e2d93bfcdab4, "Tamarindo": marker_0f2068c66c3e5ffe5c6bb909e537574c, "Jacó": marker_ffbb1e099febdb6fea9ac2ab69a36ce3, "Manuel Antonio": marker_6b06df13e29ebaf0c0a815a3171e0dc8, "Puerto Viejo": marker_bd8bcf8966901722f25a3c28351c816a}).forEach(mk=> mk.closePopup && mk.closePopup());
           if (activeRouteLayer) { mapRef.removeLayer(activeRouteLayer); activeRouteLayer=null; }
-          setTimeout(resetToAllCitiesMobile, 120);
+          setTimeout(()=> resetToInitial(true), 120);
           sheet.classList.remove("open"); crEnableMapInteraction();
         } else {
           if (typeof activeRouteLayer !== 'undefined' && activeRouteLayer) { try { mapRef.removeLayer(activeRouteLayer); } catch(e){} activeRouteLayer = null; }
 
-          window.selectedCityMobile = city;
+          selectedCityMobile = city;
           if (mapRef.flyTo) mapRef.flyTo([lat,lng], Math.max(mapRef.getZoom(), 11), {duration:.7}); else mapRef.setView([lat,lng], Math.max(mapRef.getZoom(), 11));
           const mk = {"San José": marker_32f83795174731e53923e2d93bfcdab4, "Tamarindo": marker_0f2068c66c3e5ffe5c6bb909e537574c, "Jacó": marker_ffbb1e099febdb6fea9ac2ab69a36ce3, "Manuel Antonio": marker_6b06df13e29ebaf0c0a815a3171e0dc8, "Puerto Viejo": marker_bd8bcf8966901722f25a3c28351c816a}[city];
           setTimeout(()=> mk && mk.openPopup && mk.openPopup(), 720);
@@ -1468,7 +1457,7 @@ function padBoundsByPixels(bounds, px) {
         const mi = Math.round(miles(r.dkm));
         const eta = etaFromKm(r.dkm);
         const dirOverlay = `<a href="#" onclick="routeAirportToCity('${code}','${r.name}');return false;">Directions</a>`;
-        const openGM = `<a href="${gmaps(ll, r.cll)}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>`;
+        const openGM = `<a href="${gmaps(ll, r.cll)}" data-od="gm" data-olat="${ll.lat}" data-olng="${ll.lng}" data-dlat="${r.cll.lat}" data-dlng="${r.cll.lng}" target="_blank" rel="noopener">Open in Google Maps</a>`;
         return `<li>${name}: ${mi} mi (~${eta}) · ${dirOverlay} · ${openGM}</li>`;
       }).join('');
 
@@ -1604,7 +1593,7 @@ function padBoundsByPixels(bounds, px) {
         mapRef.removeLayer(activeRouteLayer);
         window.activeRouteLayer = null;
       }} catch(e){}
-      try { if (typeof resetToAllCitiesMobile === 'function') resetToAllCitiesMobile(); } catch(e){}
+      try { if (typeof resetToInitial === 'function') resetToInitial(true); } catch(e){}
     });
   }
   // Ensure help panel shows on initial mobile load
@@ -1953,65 +1942,44 @@ function padBoundsByPixels(bounds, px) {
     if (reset) reset.addEventListener('click', function(){ haptic(10); }, {passive:true});
   })();
   // City selection inside the Cities sheet (elements with data-city)
-  document.addEventListener('click', function(ev){
-    try{
-      var el = ev.target && ev.target.closest && ev.target.closest('#citySheet [data-city]');
-      if (el) haptic(10);
-    }catch(e){}
-  }, {passive:true, capture:false});
-})();
-</script>
+  </script>
 
 
 <script>
-// Extra haptics: on panel open/close and "Directions" taps (mobile-friendly)
-(function(){
-  function haptic(ms){
-    try{
-      if (!('vibrate' in navigator)) return;
-      var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
-      if (mq && mq.matches) return;
-      navigator.vibrate(Math.max(0, ms|0) || 10);
-    }catch(e){}
+// Deep-link Directions: Google Maps app -> Apple Maps (Map Link) -> Google Maps web.
+window.openDirectionsBest = function(o, d) {
+  function n(x){ return Number(x).toFixed(6); }
+  var sO = n(o.lat)+','+n(o.lng);
+  var sD = n(d.lat)+','+n(d.lng);
+  var gmapsApp = 'comgooglemaps://?saddr='+sO+'&daddr='+sD+'&directionsmode=driving';
+  var appleWeb = 'https://maps.apple.com/?saddr='+sO+'&daddr='+sD+'&dirflg=d';
+  var gmapsWeb = 'https://www.google.com/maps/dir/?api=1&origin='+sO+'&destination='+sD+'&travelmode=driving';
+  var fired = false, cancelled = false, timers = [];
+  function clearAll(){ for (var i=0;i<timers.length;i++) clearTimeout(timers[i]); timers = []; }
+  function cancelIfHidden(){ if (document.hidden) { cancelled = true; clearAll(); } }
+  document.addEventListener('visibilitychange', cancelIfHidden, { once:true });
+  window.addEventListener('pagehide', cancelIfHidden, { once:true });
+  function go(url, sameTab){ if (!fired && !cancelled) { fired = true; sameTab? (location.href=url) : window.open(url, '_blank', 'noopener'); } }
+  function later(ms, fn){ timers.push(setTimeout(fn, ms)); }
+  go(gmapsApp, true);
+  later(300, function(){ if (!fired) go(appleWeb, true); });
+  later(700, function(){ if (!fired) go(gmapsWeb, false); });
+};
+document.addEventListener('click', function(ev){
+  var el = ev.target && ev.target.closest && ev.target.closest('a[data-od="gm"]');
+  if (!el) return;
+  // Only intercept on mobile; on desktop, let the anchor open normally.
+  var ua = (navigator && navigator.userAgent) || '';
+  var isMobile = /iP(hone|ad|od)/.test(ua) || /Android/.test(ua);
+  if (!isMobile) return; // desktop: no preventDefault; default link opens (new tab via target)
+  var o = { lat: parseFloat(el.getAttribute('data-olat')), lng: parseFloat(el.getAttribute('data-olng')) };
+  var d = { lat: parseFloat(el.getAttribute('data-dlat')), lng: parseFloat(el.getAttribute('data-dlng')) };
+  if (isFinite(o.lat) && isFinite(o.lng) && isFinite(d.lat) && isFinite(d.lng)) {
+    ev.preventDefault();
+    try { if (typeof haptic === 'function') haptic(10); } catch(e){}
+    window.openDirectionsBest(o, d);
   }
-
-  // 1) Panels: Help and Cities (open/close)
-  (function(){
-    var helpPanel = document.getElementById('helpPanel');
-    var citySheet = document.getElementById('citySheet');
-    function isHelpOpen(){ return helpPanel && !helpPanel.classList.contains('collapsed'); }
-    function isCityOpen(){ return citySheet && citySheet.classList.contains('open'); }
-    var prevHelp = isHelpOpen();
-    var prevCity = isCityOpen();
-
-    var obs = new MutationObserver(function(muts){
-      muts.forEach(function(m){
-        if (m.attributeName !== 'class') return;
-        var t = m.target;
-        if (t === helpPanel){
-          var now = isHelpOpen();
-          if (now !== prevHelp){ haptic(10); prevHelp = now; }
-        } else if (t === citySheet){
-          var nowC = isCityOpen();
-          if (nowC !== prevCity){ haptic(10); prevCity = nowC; }
-        }
-      });
-    });
-    if (helpPanel) obs.observe(helpPanel, {attributes:true});
-    if (citySheet) obs.observe(citySheet, {attributes:true});
-  })();
-
-  // 2) "Directions" taps in popups (buttons/links with visible text or aria-label containing "Directions")
-  document.addEventListener('click', function(ev){
-    try{
-      var el = ev.target && ev.target.closest && ev.target.closest('a,button');
-      if (!el) return;
-      var label = ((el.getAttribute('aria-label')||'') + ' ' + (el.textContent||'')).trim().toLowerCase();
-      if (!label) return;
-      if (label.includes('directions')) { haptic(10); }
-    }catch(e){}
-  }, {passive:true});
-})();
+}, {capture:true});
 </script>
 
 </body>
