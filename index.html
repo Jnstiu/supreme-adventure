@@ -226,34 +226,170 @@
 
 <style>
 /* Always-visible mobile Reset button (bottom-left, above the 'i' icon) */
-#mobileResetBtn{
-  position: fixed;
-  left: 16px;
-  bottom: calc(74px + env(safe-area-inset-bottom));
-   /* under #helpPanel (820), above map UI */
-  width: 46px;
-  height: 46px;
-  border-radius: 9999px;
-  background: rgba(20,20,20,0.92);
-  color: #fff;
-  border: 1px solid #333;
-  box-shadow: 0 8px 24px rgba(0,0,0,.35);
-  display: none;
-  align-items: center;
-  justify-content: center;
 
-  z-index: 1100;
-}
-#mobileResetBtn::before { content: "⤢"; font-size: 28px; line-height: 1; display: block; }
+
 #mobileResetBtn:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
 
 /* Always show on mobile / coarse pointer; hide on desktop fine-pointer */
-@media (max-width: 900px), (pointer: coarse) { html body #mobileResetBtn { display: flex !important; 
-  z-index: 1100;
-} }
-@media (min-width: 901px) and (pointer: fine) { html body #mobileResetBtn { display: none !important; 
-  z-index: 1100;
-} }
+@media (max-width: 900px), (pointer: coarse) { html body  }
+@media (min-width: 901px) and (pointer: fine) { html body  }
+</style>
+
+
+<style>
+/* === Mobile buttons parity & layout (override) === */
+@media (max-width: 900px), (pointer: coarse) {
+  /* Reset: match collapsed Help icon size/color; inline left, 8px above */
+  
+  
+
+  /* Cities FAB: icon-only mini buildings; same size/colors as Help icon */
+  
+  
+
+  /* Keep Help icon aligned left */
+  #helpPanel.collapsed #helpToggle,
+  #helpToggle { left: calc(env(safe-area-inset-left, 0px) + 12px); }
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  
+  
+  /* keep icon white if it's an SVG inside the button */
+  #mobileResetBtn svg, #mobileResetBtn i, #mobileResetBtn span {
+    color: #fff !important;
+    fill: #fff !important;
+  }
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  /* Match collapsed Help chip exactly */
+  
+  /* Draw the white arrow as an icon only (no extra background) */
+  
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  /* Exact visual parity with collapsed Help chip */
+  
+  /* Put the white ↺ glyph inside the chip */
+  
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  
+}
+</style>
+
+
+<style>
+/* Help panel (OPEN state) background */
+#helpPanel:not(.collapsed) {
+  background: rgb(33 33 33 / 92%) !important;
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  
+}
+</style>
+
+
+<style>
+/* === Consolidated mobile button styles (winning rules only) === */
+@media (max-width: 900px), (pointer: coarse) {
+  /* Help toggle baseline left alignment (unchanged look) */
+  #helpPanel.collapsed #helpToggle,
+  #helpToggle { left: calc(env(safe-area-inset-left, 0px) + 12px); }
+
+  /* Mobile Reset button — matches Help chip visually; 8px above Help */
+  #mobileResetBtn {
+    position: fixed;
+    left: calc(env(safe-area-inset-left, 0px) + 12px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px + 36px + 8px);
+    width: 36px; height: 36px; min-width: 36px; min-height: 36px;
+    border-radius: 9999px;
+    background: rgb(33 33 33);
+    color: #fff;
+    border: 1px solid #333;
+    box-shadow: 0 6px 20px rgba(0,0,0,.35);
+    display: grid; place-items: center;
+    padding: 0;
+    z-index: 1100;
+  }
+  #mobileResetBtn::before {
+    content: "↺";
+    display: grid; place-items: center;
+    width: 100%; height: 100%;
+    font-size: 18px; line-height: 1;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-weight: 500;
+    color: #fff;
+    pointer-events: none;
+  }
+
+  /* Cities button — icon-only buildings chip; same size/colors as Help */
+  #cityFab {
+    width: 36px; height: 36px; min-width: 36px; min-height: 36px;
+    border-radius: 9999px;
+    border: 1px solid #333;
+    box-shadow: 0 6px 20px rgba(0,0,0,.35);
+    background: rgb(33 33 33);
+    color: #fff;
+    font-size: 0; /* hide any text node */
+    display: block;
+  }
+  #cityFab::before {
+    content: "";
+    display: block;
+    width: 100%; height: 100%;
+    border-radius: 9999px;
+    background:
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23fff"><rect x="2" y="11" width="6" height="11" rx="1.2"/><rect x="10" y="7" width="6" height="15" rx="1.2"/><rect x="18" y="13" width="4" height="9" rx="1.2"/></svg>')
+      center / 18px 18px no-repeat;
+  }
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  /* Position Cities FAB at bottom-right (opposite of Help), above Reset */
+  #cityFab, #citiesFab, #mobileCityFab {
+    position: fixed;
+    right: calc(env(safe-area-inset-right, 0px) + 12px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    z-index: 1200;
+  }
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  /* Stack: Cities (top) -> Reset -> Help (bottom) with equal 8px gaps */
+  #cityFab, #citiesFab, #mobileCityFab {
+    position: fixed;
+    left: calc(env(safe-area-inset-left, 0px) + 12px);
+    right: auto !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px + 36px + 8px + 36px + 8px);
+    z-index: 1200; /* above Reset (1100), below Help when open */
+  }
+}
 </style>
 
 </head>
@@ -282,9 +418,9 @@
   z-index: 1400;
 } }
 
-  #cityFab { position: absolute; right: 14px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 1000; background: #111; color: #fff; border: 0; border-radius: 9999px; width: 56px; height: 56px; box-shadow: 0 10px 20px rgba(0,0,0,.35); font-weight: 700; display: none; }
+  
   #cityFab:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
-  @media (min-width: 901px) and (pointer: fine) { #cityFab { display: none; } }
+  @media (min-width: 901px) and (pointer: fine) {  }
 
   #citySheet { position: absolute; left: 0; right: 0; bottom: 0; transform: translateY(100%); transition: transform .28s ease; z-index: 1400; background: rgba(20,20,20,.97); color: #fff; border-top-left-radius: 16px; border-top-right-radius: 16px; padding: 8px 14px calc(14px + env(safe-area-inset-bottom)); box-shadow: 0 -12px 28px rgba(0,0,0,.4); display: block; }
   #citySheet.open { transform: translateY(0%); }
@@ -384,7 +520,7 @@
 
 
 /* Icon look – "expand to full" diagonals */
-#mobileResetBtn::before { content: "⤢"; font-size: 18px; font-weight: 700; }
+
 
 
 /* Safety: prevent closed sheet from blocking map gestures */
