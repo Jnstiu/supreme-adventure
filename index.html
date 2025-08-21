@@ -207,7 +207,9 @@
     z-index: 815;
   }
   /* Ensure help panel sits above scrim when visible */
-  #helpPanel { z-index: 820; }
+  #helpPanel {  
+  z-index: 2000;
+}
 }
 </style>
 <style>
@@ -217,21 +219,24 @@
     position: absolute;
     inset: 0;
     background: rgba(0,0,0,0.35);
-    z-index: 795; /* below helpPanel (800), above map */
+     /* below helpPanel (800), above map */
     display: none;
-  }
+  
+  pointer-events: auto;
+
+  z-index: 1999;
+}
   #helpScrim.visible { display: block; }
 }
 </style>
 
 <style>
-/* Mobile floating Reset View button */
-#mobileResetBtn {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(86px + env(safe-area-inset-bottom));
-  z-index: 810;
+/* Always-visible mobile Reset button (bottom-left, above the 'i' icon) */
+#mobileResetBtn{
+  position: fixed;
+  left: 16px;
+  bottom: calc(74px + env(safe-area-inset-bottom));
+   /* under #helpPanel (820), above map UI */
   width: 46px;
   height: 46px;
   border-radius: 9999px;
@@ -242,15 +247,19 @@
   display: none;
   align-items: center;
   justify-content: center;
-}
-#mobileResetBtn:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
-#mobileResetBtn svg { width: 38px; height: 38px; display: block; }
-#mobileResetBtn.show { display: flex; }
 
-/* Only render the control on mobile-sized or coarse-pointer devices */
-@media (min-width: 901px) and (pointer: fine) {
-  #mobileResetBtn { display: none !important; }
+  z-index: 1100;
 }
+#mobileResetBtn::before { content: "⤢"; font-size: 28px; line-height: 1; display: block; }
+#mobileResetBtn:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
+
+/* Always show on mobile / coarse pointer; hide on desktop fine-pointer */
+@media (max-width: 900px), (pointer: coarse) { html body #mobileResetBtn { display: flex !important; 
+  z-index: 1100;
+} }
+@media (min-width: 901px) and (pointer: fine) { html body #mobileResetBtn { display: none !important; 
+  z-index: 1100;
+} }
 </style>
 
 </head>
@@ -313,7 +322,7 @@
   position: absolute;
   left: 12px;
   bottom: calc(12px + env(safe-area-inset-bottom));
-  z-index: 800;
+  
   width: min(92vw, 340px);
   max-width: 340px;
   background: rgba(20,20,20,0.92);
@@ -323,6 +332,8 @@
   box-shadow: 0 6px 20px rgba(0,0,0,0.35);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   backdrop-filter: saturate(110%) blur(2px);
+
+  z-index: 2000;
 }
 #helpPanel .hp-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -355,7 +366,9 @@
 
 /* Mobile tweaks */
 @media (max-width: 900px), (pointer: coarse) {
-  #helpPanel { width: min(92vw, 320px); font-size: 13px; }
+  #helpPanel { width: min(92vw, 320px); font-size: 13px; 
+  z-index: 2000;
+}
 }
 
 
@@ -371,26 +384,7 @@
   #helpPanel:not(.collapsed) #helpToggle::after { content: ""; }
 }
 
-/* Mobile reset-to-default floating button */
-#mobileResetBtn {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(84px + env(safe-area-inset-bottom));
-  z-index: 810;
-  display: none;
-  background: #222;
-  color: #fff;
-  border: 1px solid #333;
-  border-radius: 999px;
-  padding: 10px 14px;
-  font-size: 16px;
-  line-height: 1;
-  box-shadow: 0 6px 18px rgba(0,0,0,.35);
-  cursor: pointer;
-}
-#mobileResetBtn.show { display: inline-flex; align-items: center; justify-content: center; }
-#mobileResetBtn:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
+
 /* Icon look – "expand to full" diagonals */
 #mobileResetBtn::before { content: "⤢"; font-size: 18px; font-weight: 700; }
 
@@ -462,8 +456,31 @@
 
     function resetToInitial(smooth) {
       if (mapRef.flyTo && smooth) mapRef.flyTo(initialCenter, initialZoom, {duration:.8});
-      else mapRef.setView(initialCenter, initialZoom, {animate:!!smooth});
+      else mapRef.setView(initialCenter, initialZoom, {animate: !!smooth});
+    
     }
+    // Close any open popups (cities, airports, or other layers)
+    function crCloseAllPopups() {
+      try {
+        if (mapRef && typeof mapRef.closePopup === 'function') {
+          mapRef.closePopup(); // closes the currently open popup, if any
+        }
+        if (mapRef && typeof mapRef.eachLayer === 'function') {
+          mapRef.eachLayer(function (lyr) {
+            try {
+              if (lyr && typeof lyr.closePopup === 'function') lyr.closePopup();
+              if (lyr && lyr.getPopup && lyr.getPopup && lyr.getPopup()) {
+                var p = lyr.getPopup();
+                if (p && typeof p.remove === 'function') p.remove();
+              }
+            } catch (e) {}
+          });
+        }
+      } catch (e) {}
+    }
+// (removed stray leftover from earlier patch)
+// (removed stray leftover from earlier patch)
+// (removed stray leftover from earlier patch)
 
     function padBoundsByPixels(bounds, px) {
       var z = mapRef.getZoom();
@@ -475,27 +492,9 @@
       return L.latLngBounds(mapRef.unproject(nw2, z), mapRef.unproject(se2, z));
     }
     function applyMaxBounds() {
-      // New: remove hard max bounds to avoid snap-back. Rely on Reset View for recentering.
-      try {
-        var isMobile = (function(){ try { return window.matchMedia &&  (matchMedia('(pointer: coarse)').matches || window.innerWidth <= 900); } catch(e){ return (window.innerWidth||1000) <= 900; } })();
-        var fudge = isMobile ? 1.25 : 0.90; // allow a small zoom-out from the initial frame
-        if (typeof initialZoom !== 'undefined' && mapRef && mapRef.setMinZoom) {
-          var mz = Math.max(0, initialZoom - fudge);
-          mapRef.setMinZoom(mz);
-          if (mapRef.options) mapRef.options.minZoom = mz;
-        } else if (mapRef && mapRef.options) {
-          var mz2 = Math.max(0, (typeof initialZoom !== 'undefined' ? initialZoom : mapRef.getZoom()) - fudge);
-          mapRef.options.minZoom = mz2;
-          if (mapRef.setMinZoom) try { mapRef.setMinZoom(mz2); } catch(e){}
-        }
-        // Clear any existing bounds & snap
-        if (mapRef && mapRef.setMaxBounds) mapRef.setMaxBounds(null);
-        if (mapRef && mapRef.options) {
-          mapRef.options.maxBounds = null;
-          mapRef.options.maxBoundsViscosity = 0;
-        }
-      } catch(e) { /* no-op */ }
-}
+      if (isMobile()) mapRef.setMaxBounds(padBoundsByPixels(L.latLngBounds([7.0,-87.0], [12.1,-82.0]), PADDING_PX));
+      else mapRef.setMaxBounds(L.latLngBounds([7.0,-87.0], [12.1,-82.0]));
+    }
     applyMaxBounds();
 
     // ROUTING
@@ -562,7 +561,7 @@
     var resetBtn = document.getElementById('resetViewBtn');
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
-        document.querySelectorAll('#cityMenu .btn').forEach(b=> {
+        crCloseAllPopups(); document.querySelectorAll('#cityMenu .btn').forEach(b=> {
           b.classList.remove('selected'); b.setAttribute('aria-pressed','false');
         });
         selectedCity = null;
@@ -621,18 +620,6 @@
         });
       }
 
-
-      // Outside click (capture) closes only if tapping outside the panel (mobile only)
-      document.addEventListener('click', function(ev){
-        try {
-          if (!isMobile()) return;
-          var isOpen = btn.getAttribute('aria-expanded') === 'true';
-          if (!isOpen) return;
-          var within = panel.contains(ev.target) || btn.contains(ev.target);
-          if (!within) { setExpanded(false); }
-        } catch(e){}
-      }, true);
-
       // Keep labels consistent when resizing across breakpoints
       window.addEventListener('resize', function(){
         var isOpen = btn.getAttribute('aria-expanded') === 'true';
@@ -689,7 +676,7 @@
 
       // Reset behavior
       btn.addEventListener('click', function() {
-        try { Object.values({"San José": marker_32f83795174731e53923e2d93bfcdab4, "Tamarindo": marker_0f2068c66c3e5ffe5c6bb909e537574c, "Jacó": marker_ffbb1e099febdb6fea9ac2ab69a36ce3, "Manuel Antonio": marker_6b06df13e29ebaf0c0a815a3171e0dc8, "Puerto Viejo": marker_bd8bcf8966901722f25a3c28351c816a}).forEach(mk=> mk.closePopup && mk.closePopup()); } catch(e) {}
+        crCloseAllPopups(); try { Object.values({"San José": marker_32f83795174731e53923e2d93bfcdab4, "Tamarindo": marker_0f2068c66c3e5ffe5c6bb909e537574c, "Jacó": marker_ffbb1e099febdb6fea9ac2ab69a36ce3, "Manuel Antonio": marker_6b06df13e29ebaf0c0a815a3171e0dc8, "Puerto Viejo": marker_bd8bcf8966901722f25a3c28351c816a}).forEach(mk=> mk.closePopup && mk.closePopup()); } catch(e) {}
         if (typeof activeRouteLayer !== 'undefined' && activeRouteLayer) { 
           mapRef.removeLayer(activeRouteLayer); activeRouteLayer = null; 
         }
@@ -1037,113 +1024,32 @@
 </script>
 
 
-<button id="mobileResetBtn" type="button" aria-label="Reset to full map view" title="Reset view">
-  <!-- Diagonal expand icon in white -->
-  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <polyline points="14 3 21 3 21 10"></polyline>
-    <line x1="21" y1="3" x2="14" y2="10"></line>
-    <polyline points="10 21 3 21 3 14"></polyline>
-    <line x1="3" y1="21" x2="10" y2="14"></line>
-  </svg>
-</button>
-
-
 <script>
-(function mobileResetButton(){
+(function(){
   var btn = document.getElementById('mobileResetBtn');
-  if (!btn) return;
-
-  function isMobile(){
-    try { return (window.matchMedia && (matchMedia('(pointer: coarse)').matches || window.innerWidth <= 900)); }
-    catch(e){ return (window.innerWidth||1000) <= 900; }
-  }
-
-  function anyPopupOpen(){
-    try { return !!document.querySelector('.leaflet-popup-pane .leaflet-popup'); } catch(e){ return false; }
-  }
-
-  function approx(a,b,t){ return Math.abs(a-b) <= t; }
-
-  function updateVisibility(){
-    try {
-      if (!isMobile()) { btn.classList.remove('show'); return; }
-      if (!window.mapRef || !mapRef.getCenter || !mapRef.getZoom) { btn.classList.remove('show'); return; }
-      var z = mapRef.getZoom();
-      var c = mapRef.getCenter ? mapRef.getCenter() : null;
-      var atDefault = false;
-      if (typeof window.initialZoom !== 'undefined' && window.initialCenter) {
-        var tolZ = 0.05;
-        var tolLat = 0.004; // ~450m
-        var tolLng = 0.004; // ~450m near equator
-        atDefault = (Math.abs(z - window.initialZoom) <= tolZ) &&
-                    c && (Math.abs(c.lat - window.initialCenter.lat) <= tolLat) &&
-                    (Math.abs(c.lng - window.initialCenter.lng) <= tolLng);
-      }
-      // Show whenever NOT at default frame
-      if (!atDefault) btn.classList.add('show'); else btn.classList.remove('show');
-    } catch(e){ /* no-op */ }
-  }
-      var hasSelection = (window.selectedCityMobile) || (window.selectedCity);
-      var hasRoute = (typeof window.activeRouteLayer !== 'undefined' && window.activeRouteLayer);
-      var zoomed = false;
-      if (window.mapRef && mapRef.getZoom && typeof window.initialZoom !== 'undefined') {
-        zoomed = mapRef.getZoom() > (initialZoom + 0.05);
-      }
-      if (hasSelection || hasRoute || anyPopupOpen() || zoomed) btn.classList.add('show');
-      else btn.classList.remove('show');
-    } catch(e){/* no-op */}
-  }
-
-  // Click behavior: mirror desktop Reset View
-  btn.addEventListener('click', function(){
-    try {
-      // Close all popups
-      if (window.mapRef) { mapRef.closePopup(); }
-      // Clear any active route
-      if (typeof window.activeRouteLayer !== 'undefined' && window.activeRouteLayer && window.mapRef) {
-        try { mapRef.removeLayer(activeRouteLayer); } catch(e){}
+  if (btn) {
+    btn.addEventListener('click', function(){
+      try { if (window.mapRef) mapRef.closePopup(); } catch(e){}
+      try { if (window.activeRouteLayer && window.mapRef && mapRef.hasLayer(activeRouteLayer)) {
+        mapRef.removeLayer(activeRouteLayer);
         window.activeRouteLayer = null;
+      }} catch(e){}
+      try { if (typeof resetToInitial === 'function') resetToInitial(true); } catch(e){}
+    });
+  }
+  // Ensure help panel shows on initial mobile load
+  document.addEventListener('DOMContentLoaded', function(){
+    try {
+      var isMobile = (window.matchMedia && (matchMedia('(max-width:900px)').matches || matchMedia('(pointer: coarse)').matches));
+      if (!isMobile) return;
+      var panel = document.getElementById('helpPanel');
+      var scrim = document.getElementById('helpScrim');
+      if (panel && scrim) {
+        panel.classList.remove('collapsed');
+        scrim.setAttribute('aria-hidden','false');
       }
-      // Clear selected city vars used by mobile/desktop flows
-      if (typeof window.selectedCity !== 'undefined') window.selectedCity = null;
-      if (typeof window.selectedCityMobile !== 'undefined') window.selectedCityMobile = null;
-      // Close the mobile Cities sheet if open
-      var sheet = document.getElementById('citySheet');
-      if (sheet && sheet.classList && sheet.classList.contains('open')) {
-        var closeBtn = document.getElementById('closeSheetBtn');
-        if (closeBtn) try { closeBtn.click(); } catch(e){ sheet.classList.remove('open'); }
-        else { sheet.classList.remove('open'); }
-      }
-      // Smoothly return to initial frame
-      if (typeof window.resetToInitial === 'function') window.resetToInitial(true);
-      // Hide after resetting
-      btn.classList.remove('show');
-    } catch(e){ /* no-op */ }
-  });
-
-  // Keep visibility in sync with interactions
-  try {
-    if (window.mapRef && mapRef.on) {
-      mapRef.on('moveend zoomend popupopen popupclose', updateVisibility);
-    }
-  } catch(e){}
-  var sheet = document.getElementById('citySheet');
-  if (sheet) sheet.addEventListener('click', function(ev){
-    var b = ev.target && ev.target.closest ? ev.target.closest('button.btn') : null;
-    if (!b) return;
-    setTimeout(updateVisibility, 800); // after flyTo
-  });
-  // Also watch quick-jump in case of small tablets treated as mobile
-  var menu = document.getElementById('cityMenu');
-  if (menu) menu.addEventListener('click', function(ev){
-    if (!isMobile()) return;
-    var b = ev.target && ev.target.closest ? ev.target.closest('button.btn') : null;
-    if (!b) return;
-    setTimeout(updateVisibility, 800);
-  });
-
-  // Initial state after load
-  setTimeout(updateVisibility, 600);
+    } catch(e){}
+  }, {once:true});
 })();
 </script>
 
