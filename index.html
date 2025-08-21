@@ -1930,11 +1930,31 @@ function padBoundsByPixels(bounds, px) {
 (function(){
   function haptic(ms){
     try{
-      if (!('vibrate' in navigator)) return;
+      // Respect prefers-reduced-motion
       var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
       if (mq && mq.matches) return;
-      navigator.vibrate(Math.max(0, ms|0) || 10);
+      ms = Math.max(0, ms|0) || 10;
+
+      // Native Vibration API (Android/Desktop)
+      if ('vibrate' in navigator) { try{ navigator.vibrate(ms); }catch(e){} return; }
+
+      // iOS Safari fallback: hidden Switch control "tick"
+      var isiOSWebKit = /iP(hone|ad|od)/.test(navigator.userAgent) && /WebKit/.test(navigator.userAgent);
+      if (!isiOSWebKit) return;
+
+      // Reuse a single hidden switch across the page
+      var sw = window.__cr_haptic_switch__;
+      if (!sw){
+        sw = document.createElement('input');
+        sw.type = 'checkbox';
+        sw.setAttribute('switch','');
+        Object.assign(sw.style, {position:'fixed', opacity:'0', pointerEvents:'none', width:'0', height:'0', bottom:'0', right:'0'});
+        (document.body || document.documentElement).appendChild(sw);
+        window.__cr_haptic_switch__ = sw;
+      }
+      sw.click();
     }catch(e){}
+  }catch(e){}
   }
   // Reset button
   (function(){
@@ -1957,11 +1977,31 @@ function padBoundsByPixels(bounds, px) {
 (function(){
   function haptic(ms){
     try{
-      if (!('vibrate' in navigator)) return;
+      // Respect prefers-reduced-motion
       var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
       if (mq && mq.matches) return;
-      navigator.vibrate(Math.max(0, ms|0) || 10);
+      ms = Math.max(0, ms|0) || 10;
+
+      // Native Vibration API (Android/Desktop)
+      if ('vibrate' in navigator) { try{ navigator.vibrate(ms); }catch(e){} return; }
+
+      // iOS Safari fallback: hidden Switch control "tick"
+      var isiOSWebKit = /iP(hone|ad|od)/.test(navigator.userAgent) && /WebKit/.test(navigator.userAgent);
+      if (!isiOSWebKit) return;
+
+      // Reuse a single hidden switch across the page
+      var sw = window.__cr_haptic_switch__;
+      if (!sw){
+        sw = document.createElement('input');
+        sw.type = 'checkbox';
+        sw.setAttribute('switch','');
+        Object.assign(sw.style, {position:'fixed', opacity:'0', pointerEvents:'none', width:'0', height:'0', bottom:'0', right:'0'});
+        (document.body || document.documentElement).appendChild(sw);
+        window.__cr_haptic_switch__ = sw;
+      }
+      sw.click();
     }catch(e){}
+  }catch(e){}
   }
 
   // 1) Panels: Help and Cities (open/close)
