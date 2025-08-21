@@ -392,6 +392,276 @@
 }
 </style>
 
+
+<style>
+/* === Mobile buttons: 44x44 with scaled icons and spacing === */
+@media (max-width: 900px), (pointer: coarse) {
+  /* 1) Help (collapsed icon) -> 44x44 */
+  #helpPanel.collapsed #helpToggle,
+  #helpToggle {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;mportant;
+    border-radius: 9999px !important;
+  }
+
+  /* 2) Reset button -> 44x44; keep 8px gap above Help */
+  #mobileResetBtn {
+    width: 44px !important; height: 44px !important;
+    min-width: 44px !important; min-height: 44px !important;mportant;
+    border-radius: 9999px !important;
+    left: calc(env(safe-area-inset-left, 0px) + 12px) !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px + 44px + 8px) !important;
+    display: grid !important; place-items: center !important;
+  }
+  #mobileResetBtn::before {
+    font-size: 22px !important; /* scaled from 18px for 44px chip */
+    line-height: 1 !important;
+  }
+
+  /* 3) Cities button -> 44x44; stack above Reset with same 8px gap */
+  #cityFab, #citiesFab, #mobileCityFab {
+    width: 44px !important; height: 44px !important;
+    min-width: 44px !important; min-height: 44px !important;mportant;
+    border-radius: 9999px !important;
+    position: fixed !important;
+    left: calc(env(safe-area-inset-left, 0px) + 12px) !important;
+    right: auto !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px + 44px + 8px + 44px + 8px) !important;
+    z-index: 1200 !important;
+  }
+  #cityFab::before, #citiesFab::before, #mobileCityFab::before {
+    background-size: 22px 22px !important; /* scaled from 18px */
+  }
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  /* Ensure the collapsed Help glyph scales with the 44x44 chip */
+  #helpPanel.collapsed #helpToggle,
+  #helpToggle {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;mportant;
+    border-radius: 9999px !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+  #helpToggle::before {
+    font-size: 22px !important;   /* was 14px */
+    font-weight: 500 !important;  /* thinner to match Reset glyph weight */
+    display: grid !important;
+    place-items: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    line-height: 1 !important;
+  }
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  /* Slight upward nudge for buildings icon centering */
+  #cityFab::before, #citiesFab::before, #mobileCityFab::before {
+    background-position: center 48% !important; /* was center; move up ~2% */
+  }
+}
+</style>
+
+
+<style>
+/* === Cities panel: open like Help panel === */
+@media (max-width: 900px), (pointer: coarse) {
+  /* Hide bottom-sheet grabber */
+  #grabber { display: none !important; }
+
+  /* Base: prevent blocking when closed */
+  #citySheet { pointer-events: none; }
+
+  /* Open state: same position/dimensions/visuals as Help panel */
+  #citySheet.open {
+    position: absolute !important;
+    left: 12px !important;
+    bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+    width: min(92vw, 340px) !important;
+    max-width: 340px !important;
+    background: rgb(33 33 33 / 92%) !important;
+    color: #fff !important;
+    border: 1px solid #333 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35) !important;
+    transform: none !important;
+    pointer-events: auto !important;
+    z-index: 2000 !important; /* top layer like Help */
+  }
+
+  /* Header/button spacing within the panel */
+  #citySheet h3 { margin: 10px 12px 6px !important; font-size: 16px !important; font-weight: 800 !important; }
+  #citySheet .btn { display: block !important; width: 100% !important; text-align: left !important; }
+  #citySheet #closeSheetBtn { position: absolute !important; right: 8px !important; top: 8px !important; }
+}
+</style>
+
+
+<style>
+/* === Cities panel: match Help width and smooth open/close === */
+@media (max-width: 900px), (pointer: coarse) {
+  /* Unify base styling so width never changes during open/close */
+  #citySheet {
+    position: absolute !important;
+    left: 12px !important;
+    bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+    width: min(92vw, 340px) !important;   /* match Help */
+    max-width: 340px !important;
+    background: rgb(33 33 33 / 92%) !important;
+    color: #fff !important;
+    border: 1px solid #333 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35) !important;
+    /* Closed state visuals */
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: translateY(6px) !important;
+    pointer-events: none !important;
+    z-index: 2000 !important; /* same layer as Help when open */
+    transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s !important;
+    will-change: opacity, transform;
+  }
+  /* Open state only toggles visibility/opacity/transform, not width */
+  #citySheet.open {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    pointer-events: auto !important;
+    transition: opacity .18s ease, transform .18s ease, visibility 0s linear 0s !important;
+  }
+  /* Hide bottom grabber bar if present */
+  #grabber { display: none !important; }
+}
+</style>
+
+
+<style>
+/* === Help panel: smooth open/close (match Cities) === */
+/* Apply globally so desktop gets the same polish */
+#helpPanel {
+  /* Keep existing size/position; only add transition/visibility/transform */
+  transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+  will-change: opacity, transform;
+}
+#helpPanel.collapsed {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  pointer-events: none; /* clicks pass through when collapsed */
+}
+#helpPanel:not(.collapsed) {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+</style>
+
+
+<style>
+/* === Help panel animation: keep toggle visible; animate body only === */
+#helpBody {
+  transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+  will-change: opacity, transform;
+}
+#helpPanel.collapsed #helpBody {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  pointer-events: none;
+}
+#helpPanel:not(.collapsed) #helpBody {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Ensure the container itself stays visible in collapsed state so the toggle remains on-screen */
+#helpPanel.collapsed {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  /* Force Cities panel width to match Help panel exactly (including box model) */
+  #citySheet {
+    width: min(92vw, 340px) !important;
+    max-width: 340px !important;
+    box-sizing: border-box !important;
+    padding: 10px 12px 12px !important; /* mirrors Help's typical content padding */
+    margin: 0 !important;
+    left: 12px !important;  /* align left edge */
+  }
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  /* City sheet ~2/3 width of Help (one-third narrower) */
+  #citySheet {
+    width: min(61.333vw, 226px) !important;
+    max-width: 226px !important;
+  }
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  /* Ensure width takes effect by removing right constraint from older rules */
+  #citySheet, #citySheet.open {
+    right: auto !important;
+    left: 12px !important;
+    width: min(61.333vw, 226px) !important;
+    max-width: 226px !important;
+    box-sizing: border-box !important;
+  }
+}
+</style>
+
+
+<style>
+/* Desktop: keep the Help toggle clickable when collapsed */
+@media (min-width: 901px), (pointer: fine) {
+  /* The earlier global rule set pointer-events:none on #helpPanel.collapsed, which
+     prevents clicking the Show button. We reverse that here and only disable
+     interactions on the body content. */
+  #helpPanel.collapsed { pointer-events: auto !important; }
+  #helpPanel.collapsed #helpBody { pointer-events: none !important; }
+  #helpToggle { pointer-events: auto !important; }
+}
+</style>
+
+
+<style>
+@media (max-width: 900px), (pointer: coarse) {
+  /* City sheet: reduce width by another fifth (20%) */
+  #citySheet, #citySheet.open {
+    width: min(49.067vw, 181px) !important;
+    max-width: 181px !important;
+    right: auto !important;
+    left: 12px !important;
+    box-sizing: border-box !important;
+  }
+}
+</style>
+
 </head>
 <body>
     
@@ -991,11 +1261,13 @@ function padBoundsByPixels(bounds, px) {
     window.addEventListener('resize', updateFabVisibility);
 
     if (fab && sheet) {
+      
       fab.addEventListener('click', function(){
         sheet.classList.toggle('open');
-        this.setAttribute('aria-expanded', sheet.classList.contains('open') ? 'true' : 'false');
+        var isOpen = sheet.classList.contains('open');
+        this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       });
-      if (closeBtn) closeBtn.addEventListener('click', ()=> sheet.classList.remove('open'));
+    if (closeBtn) closeBtn.addEventListener('click', ()=> sheet.classList.remove('open'));
     }
 
     // Mobile quick jump
@@ -1215,6 +1487,41 @@ function padBoundsByPixels(bounds, px) {
       }
     } catch(e){}
   }, {once:true});
+})();
+</script>
+
+
+<script>
+// Cities sheet: close when tapping outside (no scrim involved)
+(function(){
+  try {
+    var sheet = document.getElementById('citySheet');
+    if (!sheet) return;
+    var fab = document.getElementById('cityFab') || document.getElementById('citiesFab') || document.getElementById('mobileCityFab');
+
+    function handleOutside(ev){
+      try {
+        if (!sheet.classList || !sheet.classList.contains('open')) return;
+        var t = ev.target;
+        if (sheet.contains(t)) return;
+        if (fab && fab.contains && fab.contains(t)) return;
+        sheet.classList.remove('open');
+        try { if (fab) fab.setAttribute('aria-expanded','false'); } catch(e){}
+      } catch (e) {}
+    }
+
+    // capture phase to ensure we see the event even if Leaflet stops it
+    document.addEventListener('pointerdown', handleOutside, true);
+    document.addEventListener('click', handleOutside, true);
+
+    // ESC key closes the sheet
+    document.addEventListener('keydown', function(e){
+      if ((e.key === 'Escape' || e.key === 'Esc') && sheet.classList && sheet.classList.contains('open')) {
+        sheet.classList.remove('open');
+        try { if (fab) fab.setAttribute('aria-expanded','false'); } catch(e){}
+      }
+    });
+  } catch (e) {}
 })();
 </script>
 
