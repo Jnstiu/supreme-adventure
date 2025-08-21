@@ -696,6 +696,14 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
 #citySheet,#helpBody{transition:opacity var(--anim-ms) ease,transform var(--anim-ms) ease,visibility 0s linear var(--anim-ms)!important}
 }
 #map{position:fixed;inset:0;height:100vh}@supports (height:100svh){#map{height:100svh}}@supports (height:100dvh){#map{height:100dvh}}@supports (height:100lvh){#map{height:100lvh}}html,body{height:100%;margin:0;background:#000}.leaflet-control-attribution{margin-bottom:calc(env(safe-area-inset-bottom,0px) + 6px)}
+
+@media (max-width: 399px) {
+  .leaflet-control-attribution { 
+    font-size: 10px !important; 
+    line-height: 1.1 !important;
+  }
+}
+
 </style>
 <style>
 /* === Unified CHIP system (uses CR_CONFIG variables) === */
@@ -1010,20 +1018,22 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
       try {
         if (isMobile()) {
           if (resetCenterMobile && (typeof resetZoomMobile === 'number')) {
-            mapRef.setView(resetCenterMobile, resetZoomMobile, { animate: true });
+            if (mapRef.flyTo) mapRef.flyTo(resetCenterMobile, resetZoomMobile, { duration: 0.85 });
+            else mapRef.setView(resetCenterMobile, resetZoomMobile, { animate: true });
             return;
           }
-          if (mapRef && typeof mapRef.fitBounds === 'function' && typeof cityBounds !== 'undefined') {
-            mapRef.fitBounds(cityBounds.pad(0.02), { animate: true });
+          if (mapRef && typeof cityBounds !== 'undefined') {
+            var b = cityBounds.pad(0.02);
+            if (mapRef.flyToBounds) mapRef.flyToBounds(b, { animate: true, duration: 0.85 /* seconds */ });
+            else if (mapRef.fitBounds) mapRef.fitBounds(b, { animate: true });
             return;
           }
         }
       } catch (e) {}
-      // Fallback to initial frame (desktop semantics)
+      // Fallback to desktop initial frame (smooth)
       try { resetToInitial(true); } catch (e) {}
     }
 
-    // Close any open popups (cities, airports, or other layers)
     function crCloseAllPopups() {
       try {
         if (mapRef && typeof mapRef.closePopup === 'function') {
@@ -1105,7 +1115,7 @@ function padBoundsByPixels(bounds, px) {
           setSelected(btn, false); selectedCity = null;
           Object.values({"San José": marker_32f83795174731e53923e2d93bfcdab4, "Tamarindo": marker_0f2068c66c3e5ffe5c6bb909e537574c, "Jacó": marker_ffbb1e099febdb6fea9ac2ab69a36ce3, "Manuel Antonio": marker_6b06df13e29ebaf0c0a815a3171e0dc8, "Puerto Viejo": marker_bd8bcf8966901722f25a3c28351c816a}).forEach(mk=> mk.closePopup && mk.closePopup());
           if (activeRouteLayer) { mapRef.removeLayer(activeRouteLayer); activeRouteLayer=null; }
-          setTimeout(()=> resetToInitial(true), 120);
+          setTimeout(resetToAllCitiesMobile, 120);
         } else {
           document.querySelectorAll('#cityMenu .btn').forEach(b=> setSelected(b, false));
           setSelected(btn, true); selectedCity = city;
@@ -1241,6 +1251,7 @@ function padBoundsByPixels(bounds, px) {
           mapRef.removeLayer(activeRouteLayer); activeRouteLayer = null; 
         }
         if (typeof selectedCity !== 'undefined') selectedCity = null;
+        try { window.selectedCityMobile = null; } catch(e) {}
         // Close mobile sheet if open by clicking its Close control if present
         var closeBtn = document.getElementById('closeSheetBtn');
         if (closeBtn && isMobile()) try { closeBtn.click(); } catch(e) { }
@@ -1393,22 +1404,22 @@ function padBoundsByPixels(bounds, px) {
     }
 
     // Mobile quick jump
-    let selectedCityMobile = null;
+    window.selectedCityMobile = window.selectedCityMobile || null;
     document.querySelectorAll('#citySheet .btn').forEach(btn=> {
       btn.addEventListener('click', ()=> {
         const city = btn.dataset.city;
         const lat = parseFloat(btn.dataset.lat);
         const lng = parseFloat(btn.dataset.lng);
-        if (selectedCityMobile === city) {
-          selectedCityMobile = null;
+        if (window.selectedCityMobile === city) {
+          window.selectedCityMobile = null;
           Object.values({"San José": marker_32f83795174731e53923e2d93bfcdab4, "Tamarindo": marker_0f2068c66c3e5ffe5c6bb909e537574c, "Jacó": marker_ffbb1e099febdb6fea9ac2ab69a36ce3, "Manuel Antonio": marker_6b06df13e29ebaf0c0a815a3171e0dc8, "Puerto Viejo": marker_bd8bcf8966901722f25a3c28351c816a}).forEach(mk=> mk.closePopup && mk.closePopup());
           if (activeRouteLayer) { mapRef.removeLayer(activeRouteLayer); activeRouteLayer=null; }
-          setTimeout(()=> resetToInitial(true), 120);
+          setTimeout(resetToAllCitiesMobile, 120);
           sheet.classList.remove("open"); crEnableMapInteraction();
         } else {
           if (typeof activeRouteLayer !== 'undefined' && activeRouteLayer) { try { mapRef.removeLayer(activeRouteLayer); } catch(e){} activeRouteLayer = null; }
 
-          selectedCityMobile = city;
+          window.selectedCityMobile = city;
           if (mapRef.flyTo) mapRef.flyTo([lat,lng], Math.max(mapRef.getZoom(), 11), {duration:.7}); else mapRef.setView([lat,lng], Math.max(mapRef.getZoom(), 11));
           const mk = {"San José": marker_32f83795174731e53923e2d93bfcdab4, "Tamarindo": marker_0f2068c66c3e5ffe5c6bb909e537574c, "Jacó": marker_ffbb1e099febdb6fea9ac2ab69a36ce3, "Manuel Antonio": marker_6b06df13e29ebaf0c0a815a3171e0dc8, "Puerto Viejo": marker_bd8bcf8966901722f25a3c28351c816a}[city];
           setTimeout(()=> mk && mk.openPopup && mk.openPopup(), 720);
@@ -1593,7 +1604,7 @@ function padBoundsByPixels(bounds, px) {
         mapRef.removeLayer(activeRouteLayer);
         window.activeRouteLayer = null;
       }} catch(e){}
-      try { if (typeof resetToInitial === 'function') resetToInitial(true); } catch(e){}
+      try { if (typeof resetToAllCitiesMobile === 'function') resetToAllCitiesMobile(); } catch(e){}
     });
   }
   // Ensure help panel shows on initial mobile load
@@ -1929,35 +1940,12 @@ function padBoundsByPixels(bounds, px) {
 // Mobile haptics: light buzz on Reset and City select (respects reduced motion)
 (function(){
   function haptic(ms){
-    // Respect prefers-reduced-motion
-    var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (mq && mq.matches) return;
-    ms = Math.max(0, ms|0) || 10;
-
-    // Native Vibration API (Android/Desktop)
-    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
-      navigator.vibrate(ms);
-      return;
-    }
-
-    // iOS Safari fallback: hidden Switch control "tick"
-    var ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
-    var isiOSWebKit = /iP(hone|ad|od)/.test(ua) && /WebKit/.test(ua);
-    if (!isiOSWebKit) return;
-
-    // Reuse a single hidden switch across the page
-    var sw = window.__cr_haptic_switch__;
-    if (!sw){
-      sw = document.createElement('input');
-      sw.type = 'checkbox';
-      sw.setAttribute('switch','');
-      var st = sw.style;
-      st.position='fixed'; st.opacity='0'; st.pointerEvents='none';
-      st.width='0'; st.height='0'; st.bottom='0'; st.right='0';
-      (document.body || document.documentElement).appendChild(sw);
-      window.__cr_haptic_switch__ = sw;
-    }
-    sw.click();
+    try{
+      if (!('vibrate' in navigator)) return;
+      var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (mq && mq.matches) return;
+      navigator.vibrate(Math.max(0, ms|0) || 10);
+    }catch(e){}
   }
   // Reset button
   (function(){
@@ -1979,35 +1967,12 @@ function padBoundsByPixels(bounds, px) {
 // Extra haptics: on panel open/close and "Directions" taps (mobile-friendly)
 (function(){
   function haptic(ms){
-    // Respect prefers-reduced-motion
-    var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (mq && mq.matches) return;
-    ms = Math.max(0, ms|0) || 10;
-
-    // Native Vibration API (Android/Desktop)
-    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
-      navigator.vibrate(ms);
-      return;
-    }
-
-    // iOS Safari fallback: hidden Switch control "tick"
-    var ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
-    var isiOSWebKit = /iP(hone|ad|od)/.test(ua) && /WebKit/.test(ua);
-    if (!isiOSWebKit) return;
-
-    // Reuse a single hidden switch across the page
-    var sw = window.__cr_haptic_switch__;
-    if (!sw){
-      sw = document.createElement('input');
-      sw.type = 'checkbox';
-      sw.setAttribute('switch','');
-      var st = sw.style;
-      st.position='fixed'; st.opacity='0'; st.pointerEvents='none';
-      st.width='0'; st.height='0'; st.bottom='0'; st.right='0';
-      (document.body || document.documentElement).appendChild(sw);
-      window.__cr_haptic_switch__ = sw;
-    }
-    sw.click();
+    try{
+      if (!('vibrate' in navigator)) return;
+      var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (mq && mq.matches) return;
+      navigator.vibrate(Math.max(0, ms|0) || 10);
+    }catch(e){}
   }
 
   // 1) Panels: Help and Cities (open/close)
