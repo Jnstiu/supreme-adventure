@@ -374,12 +374,7 @@
 <style>
 @media (max-width: 900px), (pointer: coarse) {
   /* Position Cities FAB at bottom-right (opposite of Help), above Reset */
-  #cityFab, #citiesFab, #mobileCityFab {
-    position: fixed;
-    right: calc(env(safe-area-inset-right, 0px) + 12px);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
-    z-index: 1200;
-  }
+  
 }
 </style>
 
@@ -390,7 +385,6 @@
   #cityFab, #citiesFab, #mobileCityFab {
     position: fixed;
     left: calc(env(safe-area-inset-left, 0px) + 12px);
-    right: auto !important;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 12px + 36px + 8px + 36px + 8px);
     z-index: 1200; /* above Reset (1100), below Help when open */
   }
@@ -432,7 +426,6 @@
     border-radius: 9999px !important;
     position: fixed !important;
     left: calc(env(safe-area-inset-left, 0px) + 12px) !important;
-    right: auto !important;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 12px + 44px + 8px + 44px + 8px) !important;
     z-index: 1200 !important;
   }
@@ -493,9 +486,7 @@
     position: absolute !important;
     left: 12px !important;
     bottom: calc(12px + env(safe-area-inset-bottom)) !important;
-    width: min(92vw, 340px) !important;
-    max-width: 340px !important;
-    background: rgb(33 33 33 / 92%) !important;
+    max-background: rgb(33 33 33 / 92%) !important;
     color: #fff !important;
     border: 1px solid #333 !important;
     border-radius: 12px !important;
@@ -507,7 +498,7 @@
 
   /* Header/button spacing within the panel */
   #citySheet h3 { margin: 10px 12px 6px !important; font-size: 16px !important; font-weight: 800 !important; }
-  #citySheet .btn { display: block !important; width: 100% !important; text-align: left !important; }
+  #citySheet .btn { display: block !important; text-align: left !important; }
   #citySheet #closeSheetBtn { position: absolute !important; right: 8px !important; top: 8px !important; }
 }
 </style>
@@ -521,9 +512,8 @@
     position: absolute !important;
     left: 12px !important;
     bottom: calc(12px + env(safe-area-inset-bottom)) !important;
-    width: min(92vw, 340px) !important;   /* match Help */
-    max-width: 340px !important;
-    background: rgb(33 33 33 / 92%) !important;
+    /* match Help */
+    max-background: rgb(33 33 33 / 92%) !important;
     color: #fff !important;
     border: 1px solid #333 !important;
     border-radius: 12px !important;
@@ -605,9 +595,7 @@
 @media (max-width: 900px), (pointer: coarse) {
   /* Force Cities panel width to match Help panel exactly (including box model) */
   #citySheet {
-    width: min(92vw, 340px) !important;
-    max-width: 340px !important;
-    box-sizing: border-box !important;
+    max-box-sizing: border-box !important;
     padding: 10px 12px 12px !important; /* mirrors Help's typical content padding */
     margin: 0 !important;
     left: 12px !important;  /* align left edge */
@@ -620,9 +608,7 @@
 @media (max-width: 900px), (pointer: coarse) {
   /* City sheet ~2/3 width of Help (one-third narrower) */
   #citySheet {
-    width: min(61.333vw, 226px) !important;
-    max-width: 226px !important;
-  }
+    max-}
 }
 </style>
 
@@ -633,9 +619,7 @@
   #citySheet, #citySheet.open {
     right: auto !important;
     left: 12px !important;
-    width: min(61.333vw, 226px) !important;
-    max-width: 226px !important;
-    box-sizing: border-box !important;
+    max-box-sizing: border-box !important;
   }
 }
 </style>
@@ -658,9 +642,7 @@
 @media (max-width: 900px), (pointer: coarse) {
   /* City sheet: reduce width by another fifth (20%) */
   #citySheet, #citySheet.open {
-    width: min(49.067vw, 181px) !important;
-    max-width: 181px !important;
-    right: auto !important;
+    max-right: auto !important;
     left: 12px !important;
     box-sizing: border-box !important;
   }
@@ -692,7 +674,7 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
 #mobileResetBtn{left:calc(env(safe-area-inset-left,0px) + 12px)!important;bottom:calc(env(safe-area-inset-bottom,0px) + 12px + var(--chip-size) + var(--stack-gap))!important}
 #cityFab,#citiesFab,#mobileCityFab{left:calc(env(safe-area-inset-left,0px) + 12px)!important;bottom:calc(env(safe-area-inset-bottom,0px) + 12px + var(--chip-size) + var(--stack-gap) + var(--chip-size) + var(--stack-gap))!important}
 #helpPanel{width:var(--panel-width-help)!important;max-width:var(--panel-width-help)!important}#helpPanel,#citySheet{background:var(--panel-bg)!important}
-#citySheet,#citySheet.open{width:var(--panel-width-city)!important;max-width:var(--panel-width-city)!important;left:12px!important;right:auto!important;box-sizing:border-box!important}
+#citySheet,#citySheet.open{max-left:12px!important;right:auto!important;box-sizing:border-box!important}
 #citySheet,#helpBody{transition:opacity var(--anim-ms) ease,transform var(--anim-ms) ease,visibility 0s linear var(--anim-ms)!important}
 }
 #map{position:fixed;inset:0;height:100vh}@supports (height:100svh){#map{height:100svh}}@supports (height:100dvh){#map{height:100dvh}}@supports (height:100lvh){#map{height:100lvh}}html,body{height:100%;margin:0;background:#000}.leaflet-control-attribution{margin-bottom:calc(env(safe-area-inset-bottom,0px) + 6px)}
@@ -701,11 +683,7 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
 /* === Unified CHIP system (uses CR_CONFIG variables) === */
 @media (max-width: 900px), (pointer: coarse) {
   .chip {
-    width: var(--chip-size) !important;
-    height: var(--chip-size) !important;
-    min-width: var(--chip-size) !important;
-    min-height: var(--chip-size) !important;
-    border-radius: 9999px !important;
+    min-min-border-radius: 9999px !important;
     background: var(--chip-bg) !important;
     border: 1px solid var(--chip-border) !important;
     box-shadow: 0 6px 20px rgba(0,0,0,.35) !important;
@@ -800,6 +778,31 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
 #citySheet .btn:focus-visible { position: relative; z-index: 1500; }
 </style>
 
+
+<style id="CR_CITYSHEET_CANON">
+  #citySheet { width: var(--panel-width-city); }
+
+
+  #citySheet .btn {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+
+/* Canonical chip size driven by --chip-size */
+  .chip { width: var(--chip-size); height: var(--chip-size); }
+
+/* Icons inside chips scale with chip size */
+  .chip svg,
+  .chip img {
+    }
+
+/* Center chip contents (icons/text) */
+  .chip {
+    display: grid;
+    place-items: center;
+  }
+</style>
+
 </head>
 <body>
     
@@ -833,7 +836,7 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
   #citySheet { position: absolute; left: 0; right: 0; bottom: 0; transform: translateY(100%); transition: transform .28s ease; z-index: 1400; background: rgba(20,20,20,.97); color: #fff; border-top-left-radius: 16px; border-top-right-radius: 16px; padding: 8px 14px calc(14px + env(safe-area-inset-bottom)); box-shadow: 0 -12px 28px rgba(0,0,0,.4); display: block; }
   #citySheet.open { transform: translateY(0%); }
   #citySheet h3 { margin: 6px 0 8px; font-size: 16px; font-weight: 800; }
-  #citySheet .btn { display: block; width: 100%; text-align: left; background: #222; color: #fff; border: 2px solid #444; border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: 16px; min-height: 48px; }
+  #citySheet .btn { display: block; text-align: left; background: #222; color: #fff; border: 2px solid #444; border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: 16px; min-height: 48px; }
   @media (min-width: 901px) and (pointer: fine) { #citySheet { display: none; 
   z-index: 1400;
 } }
@@ -1092,8 +1095,8 @@ function padBoundsByPixels(bounds, px) {
     const airports = {"SJO": {"lat": 9.9939, "lng": -84.2088}, "LIR": {"lat": 10.5933, "lng": -85.5444}, "XQP": {"lat": 9.4432, "lng": -84.1298}, "TNO": {"lat": 10.3139, "lng": -85.8163}};
     const cities = {"San Jos\u00e9": {"lat": 9.93, "lng": -84.08}, "Tamarindo": {"lat": 10.3, "lng": -85.84}, "Jac\u00f3": {"lat": 9.62, "lng": -84.63}, "Manuel Antonio": {"lat": 9.39, "lng": -84.14}, "Puerto Viejo": {"lat": 9.66, "lng": -82.76}};
 
-    window.routeCityToAirport = function(city, code){ return window.routeOrFallback(cities[city], airports[code]); };
-    window.routeAirportToCity = function(code, city){ return window.routeOrFallback(airports[code], cities[city]); };
+    window.routeCityToAirport = (city, code) => drawRoute(cities[city], airports[code]);
+    window.routeAirportToCity = (code, city) => drawRoute(airports[code], cities[city]);
 
     // POPUP CONFIG (pan/zoom limits while open)
     function enableLimitedZoom() {
@@ -1985,6 +1988,45 @@ clearTimeout(h);h=setTimeout(function(){b.classList.remove('show')},ms||2000)}ca
 })();
 </script>
 
+
+
+<style id="CR_HELP_DESKTOP_CANON">
+  /* Desktop-only: restore Help collapsed pill and Show/Hide labels */
+  @media (min-width: 901px) and (pointer: fine) {
+    /* Allow text label by removing fixed 44px circle sizing */
+    #helpPanel #helpToggle {
+      width: auto !important;
+      height: auto !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      border-radius: 10px !important;
+      padding: 6px 10px !important;
+      line-height: 1.1;
+    }
+    /* Collapsed: show pill with icon + 'Show' */
+    #helpPanel.collapsed #helpToggle::before { content: "ⓘ"; font-size: 14px; font-weight: 800; margin-right: 6px; }
+    #helpPanel.collapsed #helpToggle::after  { content: "Show"; }
+    /* Expanded: label reads 'Hide' (prefer text over '✕' for consistency) */
+    #helpPanel:not(.collapsed) #helpToggle::after { content: "Hide"; }
+    /* Ensure header spacing aligns with pill look */
+    #helpPanel.collapsed .hp-header { padding: 0 6px; }
+  }
+</style>
+<style id="CR_HELP_DESKTOP_TUNING">
+  /* Desktop-only: slim collapsed Help header to match 'good' proportions */
+  @media (min-width: 901px) and (pointer: fine) {
+    #helpPanel.collapsed .hp-header {
+      padding: 6px 10px !important;
+      min-height: 36px !important;
+    }
+    /* Keep pill compact while still showing the Show/Hide text */
+    #helpPanel #helpToggle {
+      padding: 6px 10px !important;
+      line-height: 1.1 !important;
+      border-radius: 10px !important;
+    }
+  }
+</style>
 </body>
 <script>
     
