@@ -784,6 +784,22 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
   border: 0 !important;
 }
 </style>
+
+<style>
+/* CR_FOCUS_VISIBLE */
+:root{ --cr-focus-color: #00D8D8; --cr-focus-size: 3px; --cr-focus-offset: 2px; }
+.chip:focus{ outline: none; }
+.chip:focus-visible,
+#citySheet .btn:focus-visible,
+#helpPanel a:focus-visible,
+#helpPanel button:focus-visible {
+  outline: var(--cr-focus-size) solid var(--cr-focus-color);
+  outline-offset: var(--cr-focus-offset);
+  border-radius: 12px;
+}
+#citySheet .btn:focus-visible { position: relative; z-index: 1500; }
+</style>
+
 </head>
 <body>
     
@@ -1405,7 +1421,7 @@ function padBoundsByPixels(bounds, px) {
           window.selectedCityMobile = null;
           Object.values({"San José": marker_32f83795174731e53923e2d93bfcdab4, "Tamarindo": marker_0f2068c66c3e5ffe5c6bb909e537574c, "Jacó": marker_ffbb1e099febdb6fea9ac2ab69a36ce3, "Manuel Antonio": marker_6b06df13e29ebaf0c0a815a3171e0dc8, "Puerto Viejo": marker_bd8bcf8966901722f25a3c28351c816a}).forEach(mk=> mk.closePopup && mk.closePopup());
           if (activeRouteLayer) { mapRef.removeLayer(activeRouteLayer); activeRouteLayer=null; }
-          setTimeout(()=> resetToInitial(true), 120);
+          setTimeout(resetToAllCitiesMobile, 120);
           sheet.classList.remove("open"); crEnableMapInteraction();
         } else {
           if (typeof activeRouteLayer !== 'undefined' && activeRouteLayer) { try { mapRef.removeLayer(activeRouteLayer); } catch(e){} activeRouteLayer = null; }
@@ -1459,7 +1475,7 @@ function padBoundsByPixels(bounds, px) {
         const mi = Math.round(miles(r.dkm));
         const eta = etaFromKm(r.dkm);
         const dirOverlay = `<a href="#" onclick="routeAirportToCity('${code}','${r.name}');return false;">Directions</a>`;
-        const openGM = `<a href="${gmaps(ll, r.cll)}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>`;
+        const openGM = `<a href="${gmaps(ll, r.cll)}" target="_blank" rel="noopener noreferrer">Open Maps</a>`;
         return `<li>${name}: ${mi} mi (~${eta}) · ${dirOverlay} · ${openGM}</li>`;
       }).join('');
 
@@ -1999,14 +2015,31 @@ function padBoundsByPixels(bounds, px) {
       if (!el) return;
       var label = ((el.getAttribute('aria-label')||'') + ' ' + (el.textContent||'')).trim().toLowerCase();
       if (!label) return;
-      if (label.includes('directions')) { haptic(10); }
+      if (label.includes('directions')) { if (window.hapticDouble) window.hapticDouble(); else if (typeof haptic==='function') haptic(10); }
     }catch(e){}
   }, {passive:true});
 })();
 </script>
 
 
+<script>
+/* CR_HAPTIC_HELPERS */
+(function(){
+  function canVibrate(){
+    try{
+      if (!('vibrate' in navigator)) return false;
+      var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+      return !(mq && mq.matches);
+    }catch(e){ return false; }
+  }
+  window.hapticSingle = window.hapticSingle || function(){ try{ if (canVibrate()) navigator.vibrate(10); }catch(e){} };
+  window.hapticDouble = window.hapticDouble || function(){ try{ if (canVibrate()) navigator.vibrate([10,60,10]); }catch(e){} };
+})();
+</script>
+
+
 <style>
+/* CR_TOAST */
 #crToast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px)+14px);transform:translateX(-50%);
 max-width:min(92vw,480px);background:rgba(33,33,33,.92);color:#fff;font:500 13px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
 padding:10px 14px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.35);z-index:1600;opacity:0;transition:opacity .18s ease;pointer-events:none}
@@ -2018,9 +2051,9 @@ clearTimeout(h);h=setTimeout(function(){b.classList.remove('show')},ms||2000)}ca
 
 
 <script>
+/* CR_OSRM_FAST_FALLBACK */
 (function(){
-  // OSRM with fast-fallback and graceful toast
-  window.routeOrFallback = async function(origin, dest){
+  window.routeOrFallback = window.routeOrFallback || async function(origin, dest){
     var ctl = new AbortController();
     var t = setTimeout(function(){ try{ctl.abort();}catch(e){} }, 1800);
     try {
@@ -2035,7 +2068,7 @@ clearTimeout(h);h=setTimeout(function(){b.classList.remove('show')},ms||2000)}ca
       try { mapRef.fitBounds(window.activeRouteLayer.getBounds(), { padding: [30,30] }); } catch(e){}
     } catch(e){
       try { if (typeof toast === 'function') toast('Routing unavailable—opening Google Maps', 2000); } catch(_){ }
-      try { if (typeof haptic === 'function') haptic(10); } catch(_){ }
+      try { if (typeof hapticDouble === 'function') hapticDouble(); else if (typeof haptic === 'function') haptic(10); } catch(_){ }
       try { if (typeof openDirectionsBest === 'function') openDirectionsBest(origin, dest); else throw 0; } catch(_){ 
         try { window.open('https://www.google.com/maps/dir/?api=1&origin='+origin.lat+','+origin.lng+'&destination='+dest.lat+','+dest.lng+'&travelmode=driving', '_blank', 'noopener'); } catch(__){} 
       }
@@ -2043,11 +2076,97 @@ clearTimeout(h);h=setTimeout(function(){b.classList.remove('show')},ms||2000)}ca
       try { clearTimeout(t); } catch(e){}
     }
   };
-  // Override public helpers to use fast-fallback (non-destructive)
   try {
     window.routeCityToAirport = function(city, code){ return window.routeOrFallback(cities[city], airports[code]); };
     window.routeAirportToCity = function(code, city){ return window.routeOrFallback(airports[code], cities[city]); };
   } catch(e){}
+})();
+</script>
+
+
+<script>
+/* CR_LONGPRESS_SHIFTCLICK */
+(function(){
+  function distKm(a, b){
+    var toRad = function(d){ return d * Math.PI / 180; };
+    var R = 6371;
+    var dLat = toRad(b.lat - a.lat);
+    var dLng = toRad(b.lng - a.lng);
+    var sa = Math.sin(dLat/2), sb = Math.sin(dLng/2);
+    var h = sa*sa + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*sb*sb;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+  function nearestAirportForCity(name){
+    try {
+      var c = cities && cities[name];
+      if (!c) return null;
+      var bestCode = null, bestD = Infinity;
+      for (var code in airports){
+        var ap = airports[code];
+        var d = distKm(c, ap);
+        if (d < bestD){ bestD = d; bestCode = code; }
+      }
+      return bestCode;
+    } catch(e){ return null; }
+  }
+  function openCityDirections(name){
+    try {
+      var code = nearestAirportForCity(name);
+      if (!code) return;
+      try {
+        if (typeof hapticDouble === 'function') hapticDouble();
+        else if (typeof haptic === 'function') haptic(10);
+      } catch(_){}
+      if (typeof routeOrFallback === 'function') {
+        routeOrFallback(airports[code], cities[name]);
+      } else if (typeof routeAirportToCity === 'function') {
+        routeAirportToCity(code, name);
+      } else {
+        var o = airports[code], d = cities[name];
+        var url = 'https://www.google.com/maps/dir/?api=1&origin=' + o.lat + ',' + o.lng + '&destination=' + d.lat + ',' + d.lng + '&travelmode=driving';
+        try { window.open(url, '_blank', 'noopener'); } catch(_) {}
+      }
+      try {
+        var sheet = document.getElementById('citySheet');
+        if (sheet) { sheet.classList.remove('open'); if (typeof crEnableMapInteraction==='function') crEnableMapInteraction(); }
+      } catch(_){}
+    } catch(_){}
+  }
+  var PRESS_MS = 600;
+  var buttons = document.querySelectorAll('#citySheet .btn');
+  buttons.forEach(function(btn){
+    var pressTimer = null;
+    var fired = false;
+    function start(){
+      fired = false;
+      try { if (pressTimer) clearTimeout(pressTimer); } catch(_){}
+      pressTimer = setTimeout(function(){
+        fired = true;
+        openCityDirections(btn.dataset.city);
+      }, PRESS_MS);
+    }
+    function cancel(){ try { if (pressTimer) clearTimeout(pressTimer); } catch(_){ } pressTimer = null; }
+    btn.addEventListener('click', function(ev){
+      if (fired) { ev.preventDefault(); ev.stopImmediatePropagation(); fired = false; }
+    }, true);
+    btn.addEventListener('click', function(ev){
+      if (ev && ev.shiftKey){
+        ev.preventDefault(); ev.stopImmediatePropagation();
+        openCityDirections(btn.dataset.city);
+      }
+    }, true);
+    btn.addEventListener('touchstart', start,   {passive:true});
+    btn.addEventListener('touchend',   cancel,  {passive:true});
+    btn.addEventListener('touchmove',  cancel,  {passive:true});
+    btn.addEventListener('touchcancel',cancel,  {passive:true});
+    btn.addEventListener('pointerdown', start,   {passive:true});
+    btn.addEventListener('pointerup',   cancel,  {passive:true});
+    btn.addEventListener('pointerleave',cancel,  {passive:true});
+    btn.addEventListener('pointercancel',cancel, {passive:true});
+    btn.addEventListener('mousedown', function(ev){ if (ev && ev.button===0) start(); }, {passive:true});
+    btn.addEventListener('mouseup', cancel, {passive:true});
+    btn.addEventListener('mouseleave', cancel, {passive:true});
+  });
 })();
 </script>
 
