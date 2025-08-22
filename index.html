@@ -23,7 +23,7 @@
   /* Close as plain text link */
   #closeSheetBtn { position:absolute; right: 8px; left: auto; top: 4px; background: transparent; color: #e6e6e6; border: 0; padding: 6px 8px; font-size: 14px; text-decoration: underline; border-radius: 0; }
   #closeSheetBtn:hover { color: #ffffff; }
-  #closeSheetBtn:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
+  #closeSheetBtn:focus-visible { outline: 3px solid var(--cr-focus-color); outline-offset: 2px; }
 </style>
     <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}
   /* Sheet header + grabber (mobile) */
@@ -32,7 +32,7 @@
   /* Close as plain text link */
   #closeSheetBtn { position:absolute; right: 8px; left: auto; top: 4px; background: transparent; color: #e6e6e6; border: 0; padding: 6px 8px; font-size: 14px; text-decoration: underline; border-radius: 0; }
   #closeSheetBtn:hover { color: #ffffff; }
-  #closeSheetBtn:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
+  #closeSheetBtn:focus-visible { outline: 3px solid var(--cr-focus-color); outline-offset: 2px; }
 </style>
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
@@ -61,7 +61,7 @@
   /* Close as plain text link */
   #closeSheetBtn { position:absolute; right: 8px; left: auto; top: 4px; background: transparent; color: #e6e6e6; border: 0; padding: 6px 8px; font-size: 14px; text-decoration: underline; border-radius: 0; }
   #closeSheetBtn:hover { color: #ffffff; }
-  #closeSheetBtn:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
+  #closeSheetBtn:focus-visible { outline: 3px solid var(--cr-focus-color); outline-offset: 2px; }
 </style>
         
 <style>
@@ -233,7 +233,7 @@
 /* Always-visible mobile Reset button (bottom-left, above the 'i' icon) */
 
 
-#mobileResetBtn:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
+#mobileResetBtn:focus-visible { outline: 3px solid var(--cr-focus-color); outline-offset: 2px; }
 
 /* Always show on mobile / coarse pointer; hide on desktop fine-pointer */
 @media (max-width: 900px), (pointer: coarse) { html body  }
@@ -820,14 +820,14 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
   #cityMenu h3 { margin: 0 0 8px; font-size: 14px; font-weight: 700; letter-spacing: .3px; }
   #cityMenu .btn { display: block; width: 100%; text-align: left; background: #222; color: #fff; border: 2px solid #444; border-radius: 10px; padding: 10px 12px; margin: 6px 0; font-size: 14px; cursor: pointer; min-height: 44px; font-family: inherit; }
   #cityMenu .btn:hover { background: #2c2c2c; }
-  #cityMenu .btn:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
+  #cityMenu .btn:focus-visible { outline: 3px solid var(--cr-focus-color); outline-offset: 2px; }
   #cityMenu .btn.selected { background: #314252; border-color: #4e6d8a; }
   @media (max-width: 900px), (pointer: coarse) { #cityMenu { display: none; 
   z-index: 1400;
 } }
 
   
-  #cityFab:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
+  #cityFab:focus-visible { outline: 3px solid var(--cr-focus-color); outline-offset: 2px; }
   @media (min-width: 901px) and (pointer: fine) {  }
 
   #citySheet { position: absolute; left: 0; right: 0; bottom: 0; transform: translateY(100%); transition: transform .28s ease; z-index: 1400; background: rgba(20,20,20,.97); color: #fff; border-top-left-radius: 16px; border-top-right-radius: 16px; padding: 8px 14px calc(14px + env(safe-area-inset-bottom)); box-shadow: 0 -12px 28px rgba(0,0,0,.4); display: block; }
@@ -844,7 +844,7 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
   /* Close as plain text link */
   #closeSheetBtn { position:absolute; right: 8px; left: auto; top: 4px; background: transparent; color: #e6e6e6; border: 0; padding: 6px 8px; font-size: 14px; text-decoration: underline; border-radius: 0; }
   #closeSheetBtn:hover { color: #ffffff; }
-  #closeSheetBtn:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
+  #closeSheetBtn:focus-visible { outline: 3px solid var(--cr-focus-color); outline-offset: 2px; }
 
 
 #cityMenu #resetViewBtn { 
@@ -855,7 +855,7 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
 }
 #cityMenu #resetViewBtn:hover { background:#2c2c2c; }
-#cityMenu #resetViewBtn:focus-visible { outline:3px solid #FFD400; outline-offset: 2px; }
+#cityMenu #resetViewBtn:focus-visible { outline:3px solid var(--cr-focus-color); outline-offset: 2px; }
 
 
 
@@ -890,7 +890,7 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
   cursor: pointer; font-size: 13px; line-height: 1.1;
 }
 #helpToggle:hover { background: #2c2c2c; }
-#helpToggle:focus-visible { outline: 3px solid #FFD400; outline-offset: 2px; }
+#helpToggle:focus-visible { outline: 3px solid var(--cr-focus-color); outline-offset: 2px; }
 
 #helpBody {
   padding: 0 12px 12px;
@@ -950,12 +950,12 @@ S('--anim-ms',((cfg.animMs??180))+'ms');window.CR_CFG=cfg;}catch(e){console.warn
 </div>
 
 <button id="cityFab" aria-haspopup="dialog" aria-expanded="false" aria-controls="citySheet" class="chip" aria-label="Cities">Cities</button>
-<div id="citySheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" tabindex="-1" aria-describedby="citySheetDesc"><p id="citySheetDesc" class="sr-only">City list panel. Select a city to open its info card. Tap outside the panel or press Escape to close.</p>
+<div id="citySheet" role="dialog" aria-modal="true" aria-labelledby="citySheetTitle" tabindex="-1" aria-describedby="citySheetDesc"><p id="citySheetDesc" class="sr-only">City list panel. Select a city to open its info card. Tap outside the panel or press Escape to close.</p>
   <div id="sheetHeader">
     <div id="grabber" aria-hidden="true"></div>
     <button id="closeSheetBtn" aria-label="Close quick jump">Close</button>
   </div>
-  <h3 id="sheetTitle" id="citySheetTitle">Quick jump</h3>
+  <h3   id="citySheetTitle">Quick jump</h3>
   <button class="btn" data-city="San José" data-lat="9.93" data-lng="-84.08">San José</button>
   <button class="btn" data-city="Tamarindo" data-lat="10.3" data-lng="-85.84">Tamarindo</button>
   <button class="btn" data-city="Jacó" data-lat="9.62" data-lng="-84.63">Jacó</button>
@@ -1092,8 +1092,8 @@ function padBoundsByPixels(bounds, px) {
     const airports = {"SJO": {"lat": 9.9939, "lng": -84.2088}, "LIR": {"lat": 10.5933, "lng": -85.5444}, "XQP": {"lat": 9.4432, "lng": -84.1298}, "TNO": {"lat": 10.3139, "lng": -85.8163}};
     const cities = {"San Jos\u00e9": {"lat": 9.93, "lng": -84.08}, "Tamarindo": {"lat": 10.3, "lng": -85.84}, "Jac\u00f3": {"lat": 9.62, "lng": -84.63}, "Manuel Antonio": {"lat": 9.39, "lng": -84.14}, "Puerto Viejo": {"lat": 9.66, "lng": -82.76}};
 
-    window.routeCityToAirport = (city, code) => drawRoute(cities[city], airports[code]);
-    window.routeAirportToCity = (code, city) => drawRoute(airports[code], cities[city]);
+    window.routeCityToAirport = function(city, code){ return window.routeOrFallback(cities[city], airports[code]); };
+    window.routeAirportToCity = function(code, city){ return window.routeOrFallback(airports[code], cities[city]); };
 
     // POPUP CONFIG (pan/zoom limits while open)
     function enableLimitedZoom() {
@@ -1943,101 +1943,6 @@ function padBoundsByPixels(bounds, px) {
 </script>
 
 
-<script>
-// Mobile haptics: light buzz on Reset and City select (respects reduced motion)
-(function(){
-  function haptic(ms){
-    try{
-      if (!('vibrate' in navigator)) return;
-      var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
-      if (mq && mq.matches) return;
-      navigator.vibrate(Math.max(0, ms|0) || 10);
-    }catch(e){}
-  }
-  // Reset button
-  (function(){
-    var reset = document.getElementById('mobileResetBtn') || document.getElementById('resetBtn') || document.getElementById('resetButton');
-    if (reset) reset.addEventListener('click', function(){ haptic(10); }, {passive:true});
-  })();
-  // City selection inside the Cities sheet (elements with data-city)
-  document.addEventListener('click', function(ev){
-    try{
-      var el = ev.target && ev.target.closest && ev.target.closest('#citySheet [data-city]');
-      if (el) haptic(10);
-    }catch(e){}
-  }, {passive:true, capture:false});
-})();
-</script>
-
-
-<script>
-// Extra haptics: on panel open/close and "Directions" taps (mobile-friendly)
-(function(){
-  function haptic(ms){
-    try{
-      if (!('vibrate' in navigator)) return;
-      var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
-      if (mq && mq.matches) return;
-      navigator.vibrate(Math.max(0, ms|0) || 10);
-    }catch(e){}
-  }
-
-  // 1) Panels: Help and Cities (open/close)
-  (function(){
-    var helpPanel = document.getElementById('helpPanel');
-    var citySheet = document.getElementById('citySheet');
-    function isHelpOpen(){ return helpPanel && !helpPanel.classList.contains('collapsed'); }
-    function isCityOpen(){ return citySheet && citySheet.classList.contains('open'); }
-    var prevHelp = isHelpOpen();
-    var prevCity = isCityOpen();
-
-    var obs = new MutationObserver(function(muts){
-      muts.forEach(function(m){
-        if (m.attributeName !== 'class') return;
-        var t = m.target;
-        if (t === helpPanel){
-          var now = isHelpOpen();
-          if (now !== prevHelp){ haptic(10); prevHelp = now; }
-        } else if (t === citySheet){
-          var nowC = isCityOpen();
-          if (nowC !== prevCity){ haptic(10); prevCity = nowC; }
-        }
-      });
-    });
-    if (helpPanel) obs.observe(helpPanel, {attributes:true});
-    if (citySheet) obs.observe(citySheet, {attributes:true});
-  })();
-
-  // 2) "Directions" taps in popups (buttons/links with visible text or aria-label containing "Directions")
-  document.addEventListener('click', function(ev){
-    try{
-      var el = ev.target && ev.target.closest && ev.target.closest('a,button');
-      if (!el) return;
-      var label = ((el.getAttribute('aria-label')||'') + ' ' + (el.textContent||'')).trim().toLowerCase();
-      if (!label) return;
-      if (label.includes('directions')) { if (window.hapticDouble) window.hapticDouble(); else if (typeof haptic==='function') haptic(10); }
-    }catch(e){}
-  }, {passive:true});
-})();
-</script>
-
-
-<script>
-/* CR_HAPTIC_HELPERS */
-(function(){
-  function canVibrate(){
-    try{
-      if (!('vibrate' in navigator)) return false;
-      var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
-      return !(mq && mq.matches);
-    }catch(e){ return false; }
-  }
-  window.hapticSingle = window.hapticSingle || function(){ try{ if (canVibrate()) navigator.vibrate(10); }catch(e){} };
-  window.hapticDouble = window.hapticDouble || function(){ try{ if (canVibrate()) navigator.vibrate([10,60,10]); }catch(e){} };
-})();
-</script>
-
-
 <style>
 /* CR_TOAST */
 #crToast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px)+14px);transform:translateX(-50%);
@@ -2068,105 +1973,15 @@ clearTimeout(h);h=setTimeout(function(){b.classList.remove('show')},ms||2000)}ca
       try { mapRef.fitBounds(window.activeRouteLayer.getBounds(), { padding: [30,30] }); } catch(e){}
     } catch(e){
       try { if (typeof toast === 'function') toast('Routing unavailable—opening Google Maps', 2000); } catch(_){ }
-      try { if (typeof hapticDouble === 'function') hapticDouble(); else if (typeof haptic === 'function') haptic(10); } catch(_){ }
       try { if (typeof openDirectionsBest === 'function') openDirectionsBest(origin, dest); else throw 0; } catch(_){ 
         try { window.open('https://www.google.com/maps/dir/?api=1&origin='+origin.lat+','+origin.lng+'&destination='+dest.lat+','+dest.lng+'&travelmode=driving', '_blank', 'noopener'); } catch(__){} 
       }
-    } finally {
-      try { clearTimeout(t); } catch(e){}
-    }
+    } finally { try { clearTimeout(t); } catch(e){} }
   };
   try {
     window.routeCityToAirport = function(city, code){ return window.routeOrFallback(cities[city], airports[code]); };
     window.routeAirportToCity = function(code, city){ return window.routeOrFallback(airports[code], cities[city]); };
   } catch(e){}
-})();
-</script>
-
-
-<script>
-/* CR_LONGPRESS_SHIFTCLICK */
-(function(){
-  function distKm(a, b){
-    var toRad = function(d){ return d * Math.PI / 180; };
-    var R = 6371;
-    var dLat = toRad(b.lat - a.lat);
-    var dLng = toRad(b.lng - a.lng);
-    var sa = Math.sin(dLat/2), sb = Math.sin(dLng/2);
-    var h = sa*sa + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*sb*sb;
-    return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
-  }
-  function nearestAirportForCity(name){
-    try {
-      var c = cities && cities[name];
-      if (!c) return null;
-      var bestCode = null, bestD = Infinity;
-      for (var code in airports){
-        var ap = airports[code];
-        var d = distKm(c, ap);
-        if (d < bestD){ bestD = d; bestCode = code; }
-      }
-      return bestCode;
-    } catch(e){ return null; }
-  }
-  function openCityDirections(name){
-    try {
-      var code = nearestAirportForCity(name);
-      if (!code) return;
-      try {
-        if (typeof hapticDouble === 'function') hapticDouble();
-        else if (typeof haptic === 'function') haptic(10);
-      } catch(_){}
-      if (typeof routeOrFallback === 'function') {
-        routeOrFallback(airports[code], cities[name]);
-      } else if (typeof routeAirportToCity === 'function') {
-        routeAirportToCity(code, name);
-      } else {
-        var o = airports[code], d = cities[name];
-        var url = 'https://www.google.com/maps/dir/?api=1&origin=' + o.lat + ',' + o.lng + '&destination=' + d.lat + ',' + d.lng + '&travelmode=driving';
-        try { window.open(url, '_blank', 'noopener'); } catch(_) {}
-      }
-      try {
-        var sheet = document.getElementById('citySheet');
-        if (sheet) { sheet.classList.remove('open'); if (typeof crEnableMapInteraction==='function') crEnableMapInteraction(); }
-      } catch(_){}
-    } catch(_){}
-  }
-  var PRESS_MS = 600;
-  var buttons = document.querySelectorAll('#citySheet .btn');
-  buttons.forEach(function(btn){
-    var pressTimer = null;
-    var fired = false;
-    function start(){
-      fired = false;
-      try { if (pressTimer) clearTimeout(pressTimer); } catch(_){}
-      pressTimer = setTimeout(function(){
-        fired = true;
-        openCityDirections(btn.dataset.city);
-      }, PRESS_MS);
-    }
-    function cancel(){ try { if (pressTimer) clearTimeout(pressTimer); } catch(_){ } pressTimer = null; }
-    btn.addEventListener('click', function(ev){
-      if (fired) { ev.preventDefault(); ev.stopImmediatePropagation(); fired = false; }
-    }, true);
-    btn.addEventListener('click', function(ev){
-      if (ev && ev.shiftKey){
-        ev.preventDefault(); ev.stopImmediatePropagation();
-        openCityDirections(btn.dataset.city);
-      }
-    }, true);
-    btn.addEventListener('touchstart', start,   {passive:true});
-    btn.addEventListener('touchend',   cancel,  {passive:true});
-    btn.addEventListener('touchmove',  cancel,  {passive:true});
-    btn.addEventListener('touchcancel',cancel,  {passive:true});
-    btn.addEventListener('pointerdown', start,   {passive:true});
-    btn.addEventListener('pointerup',   cancel,  {passive:true});
-    btn.addEventListener('pointerleave',cancel,  {passive:true});
-    btn.addEventListener('pointercancel',cancel, {passive:true});
-    btn.addEventListener('mousedown', function(ev){ if (ev && ev.button===0) start(); }, {passive:true});
-    btn.addEventListener('mouseup', cancel, {passive:true});
-    btn.addEventListener('mouseleave', cancel, {passive:true});
-  });
 })();
 </script>
 
